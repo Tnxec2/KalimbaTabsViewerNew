@@ -1,0 +1,57 @@
+package com.kontranik.kalimbatabsviewer2.room.dao
+
+
+import androidx.paging.PagingSource
+import androidx.room.*
+import androidx.sqlite.db.SimpleSQLiteQuery
+import androidx.sqlite.db.SupportSQLiteQuery
+import com.kontranik.kalimbatabsviewer2.room.model.KTabRoom
+import kotlinx.coroutines.flow.Flow
+
+
+@Dao
+interface KTabsDao {
+
+    @RawQuery(observedEntities = [KTabRoom::class])
+    fun getPagedSongsViaQuery(query: SupportSQLiteQuery): PagingSource<Int, KTabRoom>
+
+    fun getPage(
+        bookmarked: Boolean?,
+        searchText: String?,
+        sortColumn: String,
+        sortAscending: Boolean): PagingSource<Int, KTabRoom> {
+        val where = StringBuilder("")
+        if (bookmarked != null) where.append(" WHERE bookmarked = $bookmarked ")
+        if (searchText != null) {
+            if (where.isBlank()) where.append(" WHERE ")
+            else where.append(" AND ")
+            where.append(" LOWER(title) LIKE LOWER('%$searchText%') OR LOWER(interpreter) LIKE LOWER('%$searchText%') ")
+        }
+        var sortQ = "ORDER BY LOWER($sortColumn) ${if (sortAscending) "ASC" else "DESC "}"
+        if (sortColumn != "title") {
+            sortQ += ", title ASC "
+        }
+        val statement = "SELECT * FROM ktabs_table $where $sortQ"
+        val query = SimpleSQLiteQuery(statement)
+        return getPagedSongsViaQuery(query)
+    }
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insert(ktab: KTabRoom)
+
+    @Query("DELETE FROM ktabs_table WHERE kTabId = :id")
+    fun deleteById(id: String): Int
+
+
+    @Query("SELECT * FROM ktabs_table ORDER BY updated DESC LIMIT 1")
+    fun getLastUpdated(): KTabRoom?
+
+    @Upsert
+    suspend fun update(ktab: KTabRoom): Long
+
+    @Upsert
+    suspend fun updateAll(ktabs: List<KTabRoom>): List<Long>
+
+    @Query("SELECT * FROm ktabs_table WHERE kTabId = :id")
+    fun getById(id: String): KTabRoom?
+}
