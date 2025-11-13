@@ -1,7 +1,6 @@
 package com.kontranik.kalimbatabsviewer2.room.viewmodel
 
 import android.content.Context
-import android.util.Log
 import android.view.View
 import android.widget.EditText
 import androidx.core.view.isVisible
@@ -10,14 +9,13 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import androidx.paging.liveData
-import com.kontranik.kalimbatabsviewer2.helper.SyncHelper
 import com.kontranik.kalimbatabsviewer2.room.model.KTabRoom
 import com.kontranik.kalimbatabsviewer2.room.repository.KTabsRepository
 import com.kontranik.kalimbatabsviewer2.ui.dialogs.SortParams
 import com.kontranik.kalimbatabsviewer2.ui.settings.SettingsHelper
 import kotlinx.coroutines.launch
 
-class AllSongsViewModel(
+class KtabRoomViewModel(
     savedStateHandle: SavedStateHandle,
     private val repository: KTabsRepository,
 ) : ViewModel() {

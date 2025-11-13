@@ -17,8 +17,15 @@ import com.kontranik.kalimbatabsviewer2.room.utils.Converters
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
-@Database(entities = [KTabRoom::class, Playlist::class, PlaylistKtabCrossRef::class], version = 2, exportSchema = false)
+@Database(entities = [
+    KTabRoom::class,
+    Playlist::class,
+    PlaylistKtabCrossRef::class
+ ], version = 3,
+    exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class KTabRoomDatabase : RoomDatabase() {
 
@@ -31,6 +38,11 @@ abstract class KTabRoomDatabase : RoomDatabase() {
         // same time.
         @Volatile
         private var INSTANCE: KTabRoomDatabase? = null
+
+        private const val NUMBER_OF_THREADS = 4
+        val databaseWriteExecutor: ExecutorService = Executors.newFixedThreadPool(
+            NUMBER_OF_THREADS
+        )
 
         fun getDatabase(
             context: Context,

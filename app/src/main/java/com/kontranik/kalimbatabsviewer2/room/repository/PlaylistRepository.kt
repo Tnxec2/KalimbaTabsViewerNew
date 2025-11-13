@@ -2,18 +2,24 @@ package com.kontranik.kalimbatabsviewer2.room.repository
 
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.asLiveData
+import com.kontranik.kalimbatabsviewer2.room.KTabRoomDatabase
 import com.kontranik.kalimbatabsviewer2.room.dao.PlaylistDao
 import com.kontranik.kalimbatabsviewer2.room.model.Playlist
 import kotlinx.coroutines.flow.Flow
 
 class PlaylistRepository(private val playlistDao: PlaylistDao) {
 
-    val getAllPlaylists = playlistDao.getAllPlaylists().asLiveData()
+    val getAllPlaylists = playlistDao.getAllPlaylists()
 
-    @Suppress("RedundantSuspendModifier")
     @WorkerThread
     suspend fun insert(playlist: Playlist): Long? {
         return playlistDao.insert(playlist)
+    }
+
+    @Suppress("RedundantSuspendModifier")
+    @WorkerThread
+    suspend fun upsert(playlist: Playlist) {
+        playlistDao.upsert(playlist)
     }
 
     @Suppress("RedundantSuspendModifier")
@@ -22,13 +28,14 @@ class PlaylistRepository(private val playlistDao: PlaylistDao) {
         return playlistDao.deleteById(playlistId)
     }
 
-    @Suppress("RedundantSuspendModifier")
-    @WorkerThread
-    suspend fun update(playlist: Playlist): Int? {
-        return playlistDao.update(playlist)
+
+    fun getFlowById(playlistId: Long): Flow<Playlist> {
+        return playlistDao.getFlowById(playlistId)
     }
 
-    fun getById(playlistId: Long): Flow<Playlist> {
-        return playlistDao.getById(playlistId)
+    fun deleteKTabFromPlaylist(ktabId: String, playlistId: Long) {
+        return playlistDao.deleteKTabFromPlaylist(ktabId, playlistId)
+
     }
+
 }

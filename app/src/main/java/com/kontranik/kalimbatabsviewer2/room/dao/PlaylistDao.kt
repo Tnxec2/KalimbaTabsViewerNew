@@ -16,9 +16,15 @@ interface PlaylistDao {
     @Query("DELETE FROM playlist WHERE playlistId = :playlistid")
     fun deleteById(playlistid: Long): Int
 
-    @Update
-    suspend fun update(playlist: Playlist): Int
+    @Upsert
+    suspend fun upsert(playlist: Playlist): Long
 
     @Query("SELECT * FROM Playlist WHERE playlistId = :id")
-    fun getById(id: Long): Flow<Playlist>
+    fun getFlowById(id: Long): Flow<Playlist>
+
+    @Query("SELECT * FROM Playlist WHERE playlistId = :id")
+    fun getById(id: Long): Playlist
+
+    @Query("DELETE FROM playlist_ktab_cross_ref WHERE playlistId = :playlistId AND kTabId = :ktabId")
+    fun deleteKTabFromPlaylist(ktabId: String, playlistId: Long)
 }

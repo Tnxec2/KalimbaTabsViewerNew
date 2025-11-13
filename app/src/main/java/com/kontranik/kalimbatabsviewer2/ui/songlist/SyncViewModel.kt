@@ -65,10 +65,18 @@ class SyncViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 syncState.value = SyncState().copy(state = SyncStateType.PREPARE_SYNC_LIST)
+                // Erstellen Sie das richtige Format für den ISO-String: 2025-10-06T12:45:10.230Z
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US)
+                // Wichtig: Die 'Z' am Ende bedeutet UTC. Wir müssen dem Parser die Zeitzone mitteilen.
+                dateFormat.timeZone = TimeZone.getTimeZone("UTC")
 
                 val lastUpdated = kTabsRepository.getLastUpdated()
-                lastUpdated?.updated.let { updated ->
-                    var result = fetchData("${BACKEND_URI_SYNC_COUNT}?lastUpdated=$lastUpdated")
+                val lastUpdatedString = lastUpdated?.updated?.let { date -> dateFormat.format(date) }
+
+                if (lastUpdatedString != null) {
+                    val url = "${BACKEND_URI_SYNC_COUNT}?lastupdated=${lastUpdatedString}"
+                    Log.d("SYNC COUNT URL", "url: $url")
+                    var result = fetchData(url)
                     if (result.contains("count")) {
                         val jsonObject = JSONObject(result)
                         val count = jsonObject.getInt("count")
@@ -89,7 +97,7 @@ class SyncViewModel(
 
                             do {
                                 result =
-                                    fetchData("${BACKEND_URI_SYNC}?page=$page&size=$size&lastUpdated=$lastUpdated")
+                                    fetchData("${BACKEND_URI_SYNC}?page=$page&size=$size&lastupdated=$lastUpdatedString")
                                 val jsonObject = JSONObject(result)
                                 val ktabsArray = jsonObject.getJSONArray("result")
 

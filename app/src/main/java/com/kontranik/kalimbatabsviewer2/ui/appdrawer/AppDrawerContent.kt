@@ -66,7 +66,7 @@ private fun AppDrawerContentPreview() {
         AppDrawerContent(
             rememberDrawerState(initialValue = DrawerValue.Open),
             menuItems = DrawerParams.drawerButtons,
-            defaultPick = MainNavOption.SongList
+            defaultPick = MainNavOption.KTabList
         ) { }
     }
 }

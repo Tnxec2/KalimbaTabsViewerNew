@@ -10,6 +10,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.navArgument
+import com.kontranik.kalimbatabsviewer2.ui.settings.SettingsViewModel
+import com.kontranik.kalimbatabsviewer2.ui.song.KtabDetailScreen
 import com.kontranik.kalimbatabsviewer2.ui.songlist.SongListScreen
 
 import kotlinx.coroutines.launch
@@ -18,17 +20,18 @@ import kotlinx.coroutines.launch
 @RequiresApi(Build.VERSION_CODES.O)
 fun NavGraphBuilder.mainGraph(
     drawerState: DrawerState,
-    navController: NavHostController
+    navController: NavHostController,
+    settingsViewModel: SettingsViewModel,
 ) {
 
-    val start = MainNavOption.SongList.name
+    val start = MainNavOption.KTabList.name
 
     navigation(
         startDestination = start,
         route = NavRoutes.MainRoute.name
     ) {
         composable(
-            route = MainNavOption.SongList.name
+            route = MainNavOption.KTabList.name
         ) {
             val coroutineScope = rememberCoroutineScope()
             SongListScreen(
@@ -38,9 +41,9 @@ fun NavGraphBuilder.mainGraph(
                         drawerState.open()
                     }
                 },
-                openSong = { songId ->
-                    navController.navigate("${MainNavOption.Song.name}/${songId}") {
-                        popUpTo(MainNavOption.Song.name) {
+                openSong = { ktabid ->
+                    navController.navigate("${MainNavOption.KTab.name}/${ktabid}") {
+                        popUpTo(MainNavOption.KTab.name) {
                             saveState = true
                             //saveState = true:
                             //It allows saving the states of these fragments during the process of clearing the fragment/states up to the point specified with popUpTo. In this way, the contents of the fragments are not lost.
@@ -51,6 +54,17 @@ fun NavGraphBuilder.mainGraph(
                         //During the routing process to the target route, if the target route is already at the top (existing one), it allows using the existing instance instead of creating a new instance. This prevents a page from being opened repeatedly.
                     }
                 }
+            )
+        }
+
+        composable(
+            route = "${MainNavOption.KTab.name}/{ktabid}",
+            arguments = listOf(navArgument("ktabid") { type = NavType.StringType })
+        ) {
+            KtabDetailScreen(
+                drawerState = drawerState,
+                navigateBack = { navController.navigateUp() },
+                settingsViewModel = settingsViewModel,
             )
         }
 
@@ -77,8 +91,8 @@ fun NavGraphBuilder.mainGraph(
 }
 
 enum class MainNavOption {
-    SongList,
-    Song,
+    KTabList,
+    KTab,
     Bookmarks,
     Playlist,
     Settings,

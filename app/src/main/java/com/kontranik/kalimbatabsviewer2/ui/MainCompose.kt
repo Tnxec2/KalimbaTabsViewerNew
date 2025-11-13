@@ -3,15 +3,9 @@ package com.kontranik.kalimbatabsviewer2.ui
 import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
-import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Person3
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Update
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalNavigationDrawer
@@ -19,16 +13,17 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
+import com.kontranik.kalimbatabsviewer2.AppViewModelProvider
 import com.kontranik.kalimbatabsviewer2.R
 import com.kontranik.kalimbatabsviewer2.ui.appdrawer.AppDrawerContent
 import com.kontranik.kalimbatabsviewer2.ui.appdrawer.AppDrawerItemInfo
+import com.kontranik.kalimbatabsviewer2.ui.settings.SettingsViewModel
 import com.kontranik.kalimbatabsviewer2.ui.theme.KalimbaTabsViewer2Theme
 import kotlinx.coroutines.launch
 
@@ -44,6 +39,7 @@ fun MainCompose(
 ) {
     val scope = rememberCoroutineScope()
 
+    val settingsViewModel: SettingsViewModel = viewModel(factory = AppViewModelProvider.Factory)
 
     val closeDrawer: () -> Unit = {
         if (drawerState.isOpen)
@@ -71,11 +67,11 @@ fun MainCompose(
                         AppDrawerContent(
                             drawerState = drawerState,
                             menuItems = DrawerParams.drawerButtons,
-                            defaultPick = MainNavOption.SongList
+                            defaultPick = MainNavOption.KTabList
                         ) { onUserPickedOption ->
                             when (onUserPickedOption) {
-                                MainNavOption.SongList,
-                                MainNavOption.Song,
+                                MainNavOption.KTabList,
+                                MainNavOption.KTab,
                                 MainNavOption.Bookmarks,
                                 MainNavOption.Playlist,
                                 MainNavOption.Settings
@@ -98,7 +94,8 @@ fun MainCompose(
                     ) {
                         mainGraph(
                             drawerState,
-                            navController)
+                            navController,
+                            settingsViewModel)
                     }
                 }
             }
@@ -113,7 +110,7 @@ enum class NavRoutes {
 object DrawerParams {
     val drawerButtons = arrayListOf(
         AppDrawerItemInfo(
-            drawerOption =  MainNavOption.SongList,
+            drawerOption =  MainNavOption.KTabList,
             descriptionId = R.string.menu_all_songs,
             imageVector = Icons.AutoMirrored.Filled.LibraryBooks,
             title = R.string.menu_all_songs

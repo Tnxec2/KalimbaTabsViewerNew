@@ -8,7 +8,7 @@ import java.io.Serializable
 import java.util.*
 
 @Entity(tableName = "ktabs_table")
-class KTabRoom(
+data class KTabRoom(
     @PrimaryKey @ColumnInfo(name = "kTabId") val kTabId: String,
     @ColumnInfo(name = "difficulty") var difficulty: Int = 0,
     @ColumnInfo(name = "interpreter") var interpreter: String = "",
@@ -70,4 +70,10 @@ class KTabRoom(
         scanner.close()
         return false
     }
+
+    fun hasUrl(): Boolean {
+        return source.isNotEmpty() || youtube.isNotEmpty()
+    }
+
 }
+

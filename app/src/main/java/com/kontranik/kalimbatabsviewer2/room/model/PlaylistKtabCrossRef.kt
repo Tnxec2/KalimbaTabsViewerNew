@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.Index
 
 @Entity(
+    tableName = "playlist_ktab_cross_ref",
     primaryKeys = ["playlistId", "kTabId"],
 )
 data class PlaylistKtabCrossRef(

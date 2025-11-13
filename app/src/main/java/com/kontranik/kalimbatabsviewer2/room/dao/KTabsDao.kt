@@ -54,4 +54,10 @@ interface KTabsDao {
 
     @Query("SELECT * FROm ktabs_table WHERE kTabId = :id")
     fun getById(id: String): KTabRoom?
+
+    @Query("SELECT * FROm ktabs_table WHERE kTabId = :id")
+    fun getFlowById(id: String): Flow<KTabRoom?>
+
+    @Query("INSERT INTO playlist_ktab_cross_ref (playlistId, kTabId) VALUES (:playlistId, :ktabId)")
+    fun addKtabToPlaylist(ktabId: String, playlistId: Long)
 }
