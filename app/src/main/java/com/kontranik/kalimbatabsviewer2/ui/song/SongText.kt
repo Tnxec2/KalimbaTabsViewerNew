@@ -70,7 +70,7 @@ fun KTabRoomText(
         textAlign = TextAlign.Start,
         modifier =
             Modifier
-                .padding(horizontal = 8.dp, vertical = 16.dp)
+                .padding(horizontal = 8.dp)
                 .fillMaxWidth()
                 .then(
                     if (settings.value.lineBreak.not())

@@ -75,5 +75,14 @@ data class KTabRoom(
         return source.isNotEmpty() || youtube.isNotEmpty()
     }
 
+    fun containtTextLines(): Boolean {
+        text.lines().forEach { line ->
+            if (line.startsWith(">")) {
+                return true
+            }
+        }
+        return false
+    }
+
 }
 

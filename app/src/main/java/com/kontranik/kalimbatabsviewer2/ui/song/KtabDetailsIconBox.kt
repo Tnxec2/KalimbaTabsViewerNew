@@ -87,12 +87,14 @@ fun KtabDetailsIconBox(
 
 
         //Spacer(Modifier.weight(1f))
-        IconButton(onClick = { onToggleHideText() }) {
-            Icon(
-                imageVector = if (!hideText) Icons.Default.HideSource else Icons.Default.TextFields,
-                contentDescription = "toggle hide text",
-            )
-        }
+
+        if (uiState.value.containtTextLines())
+            IconButton(onClick = { onToggleHideText() }) {
+                Icon(
+                    imageVector = if (!hideText) Icons.Default.HideSource else Icons.Default.TextFields,
+                    contentDescription = "toggle hide text",
+                )
+            }
         IconButton(onClick = { onToggleLineBreak() }) {
             Icon(
                 imageVector = if (!lineBreak) Icons.AutoMirrored.Filled.WrapText else Icons.Default.FormatAlignJustify,
