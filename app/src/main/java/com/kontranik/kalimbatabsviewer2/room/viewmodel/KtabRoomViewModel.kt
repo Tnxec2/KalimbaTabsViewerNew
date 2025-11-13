@@ -13,6 +13,10 @@ import com.kontranik.kalimbatabsviewer2.room.model.KTabRoom
 import com.kontranik.kalimbatabsviewer2.room.repository.KTabsRepository
 import com.kontranik.kalimbatabsviewer2.ui.dialogs.SortParams
 import com.kontranik.kalimbatabsviewer2.ui.settings.SettingsHelper
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 
 class KtabRoomViewModel(
@@ -20,7 +24,22 @@ class KtabRoomViewModel(
     private val repository: KTabsRepository,
 ) : ViewModel() {
 
-    private val songTextFilter = MutableLiveData<SongTextFilter>(SongTextFilter("", "updated", false))
+    private val playlistId: Long? = savedStateHandle["playlistId"]
+    var playlistIdState = MutableStateFlow<Long?>(null)
+
+    private val songTextFilter = MutableLiveData<SongTextFilter>(SongTextFilter("", "updated", false, bookmarked = false))
+
+    val showBookmarked = songTextFilter.switchMap { filter ->
+        liveData {
+            emit(filter.bookmarked)
+        }
+    }.asFlow()
+
+    init {
+        playlistId?.let {
+            playlistIdState.value = it
+        }
+    }
 
     val songsPageByFilter = songTextFilter.switchMap {
         filter -> getPageByFilter(filter)
@@ -28,19 +47,34 @@ class KtabRoomViewModel(
 
 
     private fun getPageByFilter(songTextFilter: SongTextFilter) = Pager(PagingConfig(pageSize = 15)) {
-        repository.pageKtabs(null, songTextFilter.text, songTextFilter.sort, songTextFilter.ascending) }
+        repository.pageKtabs(songTextFilter.bookmarked, songTextFilter.text, songTextFilter.sort, songTextFilter.ascending) }
         .liveData
         .cachedIn(viewModelScope)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val songsForPlaylistPage = playlistIdState
+        .filterNotNull()
+        .flatMapLatest { playlistId ->
+            Pager(
+                config = PagingConfig(
+                    pageSize = 15,
+                    enablePlaceholders = false,
+                    prefetchDistance = 3
+                )
+            ) {
+                repository.getSongsForPlaylistId(playlistId)
+            }.flow
+        }.cachedIn(viewModelScope)
 
     fun changeSearchText(context: Context,text: String?) {
         val altVal = this.songTextFilter.value
         if ( altVal == null || altVal.text != text) {
-
             val defSortParams = SettingsHelper.getDefaultSort(context, true)
             this.songTextFilter.postValue(SongTextFilter(
                 text = text,
                 sort = altVal?.sort ?: defSortParams.column,
-                ascending = altVal?.ascending ?: defSortParams.ascending
+                ascending = altVal?.ascending ?: defSortParams.ascending,
+                bookmarked = altVal?.bookmarked ?: false
             ))
         }
     }
@@ -52,7 +86,8 @@ class KtabRoomViewModel(
                 SongTextFilter(
                     text = altVal?.text,
                     sort = column,
-                    ascending = ascending
+                    ascending = ascending,
+                    bookmarked = altVal?.bookmarked ?: false
                 )
             )
         }
@@ -132,6 +167,13 @@ class KtabRoomViewModel(
         }
     }
 
+    fun toggleShowBookmarked() {
+        songTextFilter.value?.let {
+            songTextFilter.value = it.copy(bookmarked = !it.bookmarked)
+        }
+    }
+
+
 //    fun openDeleteSongDialog(adapter: PagingSongListAdapter, position: Int, kTabRoom: KTabRoom, context: Context) {
 //        AlertDialog.Builder(context)
 //            .setTitle(context.getString(R.string.song_delete_dialog_title))
@@ -151,9 +193,10 @@ class KtabRoomViewModel(
 //    }
 
 
-    class SongTextFilter(
+    data class SongTextFilter(
         var text: String?,
         var sort: String,
-        var ascending: Boolean
+        var ascending: Boolean,
+        var bookmarked: Boolean = false
     )
 }

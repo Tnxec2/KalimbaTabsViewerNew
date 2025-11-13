@@ -64,4 +64,23 @@
     <string name="youtube_link">youtube link</string>
     <string name="web_link">web link</string>
     <string name="added_to_playlist">Added to playlist "%1$s"</string>
+    <string name="playlists">Playlists</string>
+    <string name="playlist_icon">Playlist icon</string>
+    <string name="playlist_songs_title">Playlist: %1$s</string>
+    <string name="edit">Edit</string>
+    <string name="delete_playlist">Delete playlist</string>
+    <string name="remove_from_playlist">remove from playlist</string>
+    <string name="title_delete_playlist">Delete playlist</string>
+    <string name="delete_this_playlist_message">Do you want delete this playlist</string>
+    <string name="playlist_deleted">Playlist is deleted</string>
+
+    <string name="interface_header">Interface</string>
+    <string name="interface_theme_title">Theme</string>
+    <string name="system_settings">System settings</string>
+    <string name="title_system_settings">System settings</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_system">System automatic</string>
+    <string name="ktabs_list">KTabs list</string>
+    <string name="favorites">Favorites</string>
 </resources>

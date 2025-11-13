@@ -12,6 +12,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.Icon
@@ -20,6 +22,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +41,7 @@ import com.kontranik.kalimbatabsviewer2.AppViewModelProvider
 import com.kontranik.kalimbatabsviewer2.R
 import com.kontranik.kalimbatabsviewer2.room.model.KTabRoom
 import com.kontranik.kalimbatabsviewer2.room.viewmodel.KtabRoomViewModel
+import com.kontranik.kalimbatabsviewer2.room.viewmodel.ToggleFavoritesViewModel
 import com.kontranik.kalimbatabsviewer2.ui.appbar.AppBar
 import com.kontranik.kalimbatabsviewer2.ui.appbar.AppBarAction
 import com.kontranik.kalimbatabsviewer2.ui.theme.paddingSmall
@@ -51,6 +55,7 @@ fun SongListScreen(
     openSong: (id: String) -> Unit,
     viewModel: KtabRoomViewModel = viewModel(factory = AppViewModelProvider.Factory ),
     syncViewModel: SyncViewModel = viewModel(factory = AppViewModelProvider.Factory),
+    toggleFavoritesViewModel: ToggleFavoritesViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val coroutineScope = rememberCoroutineScope()
 
@@ -60,6 +65,7 @@ fun SongListScreen(
     val listState = rememberLazyListState()
 
     val list = viewModel.songsPageByFilter.collectAsLazyPagingItems()
+    val showBookmarked = viewModel.showBookmarked.collectAsState(false)
 
     Scaffold(
         snackbarHost = {
@@ -83,6 +89,15 @@ fun SongListScreen(
                         description = R.string.search,
                         onClick = { showSearch = showSearch.not() }
                     ))
+                    AppBarAction(appBarAction = AppBarAction(
+                        vector = if (showBookmarked.value) Icons.Filled.Star else Icons.Default.StarBorder,
+                        description = R.string.favorites,
+                        onClick = {
+                            coroutineScope.launch {
+                                viewModel.toggleShowBookmarked()
+                            }
+                        }
+                    ))
                     SyncAppBarAction( onSyncCompleted = {
                         coroutineScope.launch {
                             listState.scrollToItem(0)
@@ -97,7 +112,13 @@ fun SongListScreen(
             PageSongs(
                 listState,
                 list,
-                openSong)
+                openSong,
+                onToggleFavorite = {
+                    coroutineScope.launch {
+                        toggleFavoritesViewModel.toggleFavorite(it)
+                    }
+                }
+            )
         }
     }
 }
@@ -107,6 +128,7 @@ fun PageSongs(
     listState: LazyListState,
     ktabs: LazyPagingItems<KTabRoom>,
     openSong: (id: String) -> Unit,
+    onToggleFavorite: (ktabRoom: KTabRoom) -> Unit,
 ) {
 
 
@@ -127,7 +149,7 @@ fun PageSongs(
                 KtabItem(ktab = ktabRoom, onOpenKtab = {
                     openSong(ktabRoom.kTabId)
                 }, onToggleFavorite = {
-                    // TODO:
+                    onToggleFavorite(ktabRoom)
                 })
             }
         }

@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.kontranik.kalimbatabsviewer2.room.model.KTabRoom
 import com.kontranik.kalimbatabsviewer2.room.model.Playlist
 import com.kontranik.kalimbatabsviewer2.room.repository.KTabsRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -50,7 +51,9 @@ class KTabDetailsViewModel(
 
     fun addToPlaylist(songId: String, playlist: Playlist) {
         if (playlist.playlistId != null)
-            kTabsRepository.addKtabToPlaylist(songId, playlist.playlistId)
+            viewModelScope.launch(Dispatchers.IO) {
+                kTabsRepository.addKtabToPlaylist(songId, playlist.playlistId)
+            }
     }
 
 

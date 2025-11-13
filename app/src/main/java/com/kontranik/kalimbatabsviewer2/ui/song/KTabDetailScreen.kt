@@ -34,6 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kontranik.kalimbatabsviewer2.AppViewModelProvider
 import com.kontranik.kalimbatabsviewer2.R
 import com.kontranik.kalimbatabsviewer2.room.model.KTabRoom
+import com.kontranik.kalimbatabsviewer2.room.viewmodel.ToggleFavoritesViewModel
 import com.kontranik.kalimbatabsviewer2.ui.appbar.AppBar
 import com.kontranik.kalimbatabsviewer2.ui.appbar.AppBarAction
 import com.kontranik.kalimbatabsviewer2.ui.common.ConfirmDialog
@@ -49,6 +50,7 @@ fun KtabDetailScreen(
     drawerState: DrawerState,
     navigateBack: () -> Unit,
     viewModel: KTabDetailsViewModel = viewModel(factory = AppViewModelProvider .Factory),
+    toggleFavoritesViewModel: ToggleFavoritesViewModel = viewModel(factory = AppViewModelProvider .Factory),
     settingsViewModel: SettingsViewModel,
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -127,6 +129,7 @@ fun KtabDetailScreen(
                 onToggleFavorite = {
                     coroutineScope.launch {
                         viewModel.toggleFavorite()
+                        toggleFavoritesViewModel.toggleFavorite(uiState.value)
                     }
                 },
                 onToggleFullscreen = {

@@ -10,6 +10,9 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.navArgument
+import com.kontranik.kalimbatabsviewer2.ui.playlist.PlaylistKtabsScreen
+import com.kontranik.kalimbatabsviewer2.ui.playlist.PlaylistListScreen
+import com.kontranik.kalimbatabsviewer2.ui.settings.SettingsScreen
 import com.kontranik.kalimbatabsviewer2.ui.settings.SettingsViewModel
 import com.kontranik.kalimbatabsviewer2.ui.song.KtabDetailScreen
 import com.kontranik.kalimbatabsviewer2.ui.songlist.SongListScreen
@@ -30,8 +33,9 @@ fun NavGraphBuilder.mainGraph(
         startDestination = start,
         route = NavRoutes.MainRoute.name
     ) {
+
         composable(
-            route = MainNavOption.KTabList.name
+            route = MainNavOption.KTabList.name,
         ) {
             val coroutineScope = rememberCoroutineScope()
             SongListScreen(
@@ -45,13 +49,9 @@ fun NavGraphBuilder.mainGraph(
                     navController.navigate("${MainNavOption.KTab.name}/${ktabid}") {
                         popUpTo(MainNavOption.KTab.name) {
                             saveState = true
-                            //saveState = true:
-                            //It allows saving the states of these fragments during the process of clearing the fragment/states up to the point specified with popUpTo. In this way, the contents of the fragments are not lost.
                         }
                         restoreState = true
-                        //It allows restoring the old fragment states after the redirection process. In this way, when the user returns to the navigation history, he can see the old states of the fragments.
                         launchSingleTop = true
-                        //During the routing process to the target route, if the target route is already at the top (existing one), it allows using the existing instance instead of creating a new instance. This prevents a page from being opened repeatedly.
                     }
                 }
             )
@@ -68,32 +68,68 @@ fun NavGraphBuilder.mainGraph(
             )
         }
 
+        composable(MainNavOption.Playlist.name) {
+            val coroutineScope = rememberCoroutineScope()
+            PlaylistListScreen(
+                drawerState = drawerState,
+                navigateBack = {
+                    coroutineScope.launch {
+                        drawerState.open()
+                    }
+                },
+                openPlaylist = { playlistId ->
+                    navController.navigate("${MainNavOption.PlaylistKtabList.name}/${playlistId}") {
+                        popUpTo(MainNavOption.PlaylistKtabList.name) {
+                            saveState = true
+                        }
+                        restoreState = true
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = "${MainNavOption.PlaylistKtabList.name}/{playlistId}",
+            arguments = listOf(navArgument("playlistId") { type = NavType.LongType })
+        ) {
+            PlaylistKtabsScreen(
+                drawerState = drawerState,
+                navigateBack = { navController.navigateUp() },
+                openKtab = { ktabid ->
+                    navController.navigate("${MainNavOption.KTab.name}/${ktabid}") {
+                        popUpTo(MainNavOption.KTab.name) {
+                            saveState = true
+                        }
+                        restoreState = true
+                        launchSingleTop = true
+                    }
+                }
+            )
+        }
 
 
-
-
-
-//        composable(
-//            route = MainNavOption.SystemSettings.name,
-//        ) {
-//            val coroutineScope = rememberCoroutineScope()
-//            SettingsScreen(
-//                drawerState = drawerState,
-//                navigateBack = {
-//                    coroutineScope.launch {
-//                        drawerState.open()
-//                    }
-//                },
-//                globalSettingsViewModel = settingsViewModel
-//            )
-//        }
+        composable(
+            route = MainNavOption.Settings.name,
+        ) {
+            val coroutineScope = rememberCoroutineScope()
+            SettingsScreen(
+                drawerState = drawerState,
+                navigateBack = {
+                    coroutineScope.launch {
+                        drawerState.open()
+                    }
+                },
+                settingsViewModel = settingsViewModel
+            )
+        }
     }
 }
 
 enum class MainNavOption {
     KTabList,
     KTab,
-    Bookmarks,
     Playlist,
+    PlaylistKtabList,
     Settings,
 }

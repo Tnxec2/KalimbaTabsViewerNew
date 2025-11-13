@@ -1,6 +1,7 @@
 package com.kontranik.kalimbatabsviewer2.room.dao
 
 
+import android.util.Log
 import androidx.paging.PagingSource
 import androidx.room.*
 import androidx.sqlite.db.SimpleSQLiteQuery
@@ -16,13 +17,13 @@ interface KTabsDao {
     fun getPagedSongsViaQuery(query: SupportSQLiteQuery): PagingSource<Int, KTabRoom>
 
     fun getPage(
-        bookmarked: Boolean?,
+        showOnlyBookmarked: Boolean,
         searchText: String?,
         sortColumn: String,
         sortAscending: Boolean): PagingSource<Int, KTabRoom> {
         val where = StringBuilder("")
-        if (bookmarked != null) where.append(" WHERE bookmarked = $bookmarked ")
-        if (searchText != null) {
+        if (showOnlyBookmarked) where.append(" WHERE bookmarked = 1 ")
+        if (searchText != null && searchText.isNotEmpty()) {
             if (where.isBlank()) where.append(" WHERE ")
             else where.append(" AND ")
             where.append(" LOWER(title) LIKE LOWER('%$searchText%') OR LOWER(interpreter) LIKE LOWER('%$searchText%') ")
@@ -33,6 +34,7 @@ interface KTabsDao {
         }
         val statement = "SELECT * FROM ktabs_table $where $sortQ"
         val query = SimpleSQLiteQuery(statement)
+        Log.d("query", query.sql)
         return getPagedSongsViaQuery(query)
     }
 
@@ -60,4 +62,8 @@ interface KTabsDao {
 
     @Query("INSERT INTO playlist_ktab_cross_ref (playlistId, kTabId) VALUES (:playlistId, :ktabId)")
     fun addKtabToPlaylist(ktabId: String, playlistId: Long)
+
+    @Query("SELECT * FROM ktabs_table WHERE  " +
+            " kTabId IN (SELECT kTabId FROM playlist_ktab_cross_ref WHERE playlistId = :playlistId) ORDER BY title")
+    fun getSongsForPlaylistId(playlistId: Long): PagingSource<Int, KTabRoom>
 }

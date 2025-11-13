@@ -5,6 +5,8 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -72,8 +74,8 @@ fun MainCompose(
                             when (onUserPickedOption) {
                                 MainNavOption.KTabList,
                                 MainNavOption.KTab,
-                                MainNavOption.Bookmarks,
                                 MainNavOption.Playlist,
+                                MainNavOption.PlaylistKtabList,
                                 MainNavOption.Settings
                                     -> {
                                     navController.navigate(onUserPickedOption.name) {
@@ -114,6 +116,12 @@ object DrawerParams {
             descriptionId = R.string.menu_all_songs,
             imageVector = Icons.AutoMirrored.Filled.LibraryBooks,
             title = R.string.menu_all_songs
+        ),
+        AppDrawerItemInfo(
+            drawerOption =  MainNavOption.Playlist,
+            descriptionId = R.string.playlists,
+            imageVector = Icons.Default.PlaylistPlay,
+            title = R.string.playlists
         ),
         AppDrawerItemInfo(
             drawerOption =  MainNavOption.Settings,

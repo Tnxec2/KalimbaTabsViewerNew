@@ -10,8 +10,8 @@ import kotlinx.coroutines.flow.Flow
 
 class KTabsRepository(private val kTabsDao: KTabsDao) {
 
-    fun pageKtabs(bookmarked: Boolean?, searchText: String?, sort: String, ascending: Boolean): PagingSource<Int, KTabRoom> {
-        return kTabsDao.getPage(bookmarked, searchText, sort, ascending)
+    fun pageKtabs(showOnlyBookmarked: Boolean, searchText: String?, sort: String, ascending: Boolean): PagingSource<Int, KTabRoom> {
+        return kTabsDao.getPage(showOnlyBookmarked, searchText, sort, ascending)
     }
 
     @Suppress("RedundantSuspendModifier")
@@ -58,8 +58,10 @@ class KTabsRepository(private val kTabsDao: KTabsDao) {
     }
 
     fun addKtabToPlaylist(songId: String, playlistId: Long) {
-        KTabRoomDatabase.databaseWriteExecutor.execute {
-            kTabsDao.addKtabToPlaylist(songId, playlistId)
-        }
+        kTabsDao.addKtabToPlaylist(songId, playlistId)
+    }
+
+    fun getSongsForPlaylistId(playlistId: Long): PagingSource<Int, KTabRoom> {
+        return kTabsDao.getSongsForPlaylistId(playlistId)
     }
 }

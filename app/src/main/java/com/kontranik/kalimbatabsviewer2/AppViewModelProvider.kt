@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.kontranik.kalimbatabsviewer2.room.viewmodel.KtabRoomViewModel
 import com.kontranik.kalimbatabsviewer2.room.viewmodel.PlaylistViewModel
+import com.kontranik.kalimbatabsviewer2.room.viewmodel.ToggleFavoritesViewModel
 import com.kontranik.kalimbatabsviewer2.ui.settings.SettingsViewModel
 import com.kontranik.kalimbatabsviewer2.ui.song.KTabDetailsViewModel
 import com.kontranik.kalimbatabsviewer2.ui.songlist.SyncViewModel
@@ -49,6 +50,13 @@ object AppViewModelProvider {
                 this.createSavedStateHandle(),
                 application().container.kTabsRepository,
 
+            )
+        }
+
+
+        initializer {
+            ToggleFavoritesViewModel(
+                application().container.kTabsRepository,
             )
         }
     }

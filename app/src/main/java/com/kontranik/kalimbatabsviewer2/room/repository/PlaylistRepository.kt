@@ -24,8 +24,8 @@ class PlaylistRepository(private val playlistDao: PlaylistDao) {
 
     @Suppress("RedundantSuspendModifier")
     @WorkerThread
-    suspend fun delete(playlistId: Long): Int? {
-        return playlistDao.deleteById(playlistId)
+    suspend fun delete(playlistId: Long) {
+        playlistDao.deleteById(playlistId)
     }
 
 
