@@ -2,6 +2,7 @@ package com.kontranik.kalimbatabsviewer2.room.repository
 
 import androidx.annotation.WorkerThread
 import androidx.paging.PagingSource
+import com.kontranik.kalimbatabsviewer2.room.KTabRoomDatabase
 import com.kontranik.kalimbatabsviewer2.room.dao.KTabsDao
 import com.kontranik.kalimbatabsviewer2.room.model.KTabRoom
 import kotlinx.coroutines.flow.Flow
@@ -57,7 +58,8 @@ class KTabsRepository(private val kTabsDao: KTabsDao) {
     }
 
     fun addKtabToPlaylist(songId: String, playlistId: Long) {
-
-        kTabsDao.addKtabToPlaylist(songId, playlistId)
+        KTabRoomDatabase.databaseWriteExecutor.execute {
+            kTabsDao.addKtabToPlaylist(songId, playlistId)
+        }
     }
 }
