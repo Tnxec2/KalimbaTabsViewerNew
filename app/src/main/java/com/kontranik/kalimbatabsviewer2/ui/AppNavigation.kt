@@ -15,7 +15,7 @@ import com.kontranik.kalimbatabsviewer2.ui.playlist.PlaylistListScreen
 import com.kontranik.kalimbatabsviewer2.ui.settings.SettingsScreen
 import com.kontranik.kalimbatabsviewer2.ui.settings.SettingsViewModel
 import com.kontranik.kalimbatabsviewer2.ui.song.KtabDetailScreen
-import com.kontranik.kalimbatabsviewer2.ui.songlist.SongListScreen
+import com.kontranik.kalimbatabsviewer2.ui.songlist.AllKTabsListScreen
 
 import kotlinx.coroutines.launch
 
@@ -38,7 +38,7 @@ fun NavGraphBuilder.mainGraph(
             route = MainNavOption.KTabList.name,
         ) {
             val coroutineScope = rememberCoroutineScope()
-            SongListScreen(
+            AllKTabsListScreen(
                 drawerState = drawerState,
                 navigateBack = {
                     coroutineScope.launch {

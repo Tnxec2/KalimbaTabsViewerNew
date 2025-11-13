@@ -3,6 +3,7 @@ package com.kontranik.kalimbatabsviewer2.ui.common
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Icon
@@ -11,31 +12,33 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import com.kontranik.kalimbatabsviewer2.R
+import com.kontranik.kalimbatabsviewer2.ui.theme.paddingSmall
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 @Composable
 fun SearchBox(
-    queryState: MutableStateFlow<String?>,
+    queryState: String,
     minLength: Int = 2,
     onChangeSearchQuery: (query: String?) -> Unit
     ){
     val coroutineScope = rememberCoroutineScope()
-    var query by rememberSaveable {
-        mutableStateOf(queryState.value ?: "")
+    val query = remember(queryState) {
+        mutableStateOf(queryState)
     }
+
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
@@ -45,13 +48,14 @@ fun SearchBox(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
+            .padding(start = paddingSmall, bottom = paddingSmall)
     ) {
         OutlinedTextField(
-            value = query,
+            value = query.value,
             onValueChange = {
-                query = it
                 coroutineScope.launch {
-                    onChangeSearchQuery(query)
+                    query.value = it
+                    onChangeSearchQuery(query.value)
                 }
             },
             label = {
@@ -65,8 +69,8 @@ fun SearchBox(
         IconButton(
             onClick = {
                 coroutineScope.launch {
-                    query = ""
-                    onChangeSearchQuery(query)
+                    query.value = ""
+                    onChangeSearchQuery("")
                 }
             }) {
             Icon(
@@ -75,5 +79,27 @@ fun SearchBox(
             )
         }
     }
+}
 
+@Preview(showBackground = true, name = "SearchBox Empty")
+@Composable
+fun SearchBoxPreviewEmpty() {
+    SearchBox(
+        queryState = "", // Leerer Anfangszustand
+        onChangeSearchQuery = {
+            // In der Vorschau passiert bei einer Änderung nichts.
+            // Das Lambda kann leer bleiben.
+        }
+    )
+}
+
+@Preview(showBackground = true, name = "SearchBox With Text")
+@Composable
+fun SearchBoxPreviewWithText() {
+    SearchBox(
+        queryState = "Für Elise", // Anfangszustand mit Text
+        onChangeSearchQuery = {
+            // Auch hier bleibt das Lambda für die Vorschau leer.
+        }
+    )
 }

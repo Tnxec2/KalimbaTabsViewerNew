@@ -1,6 +1,7 @@
 package com.kontranik.kalimbatabsviewer2.ui.common
 
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -17,7 +18,7 @@ fun ConfirmDialog(
             title = { Text(text = data.title) },
             text = { Text(text = data.text) },
             confirmButton = {
-                TextButton(
+                OutlinedButton (
                     onClick = {
                         data.onConfirm()
                     }
@@ -26,7 +27,7 @@ fun ConfirmDialog(
                 }
             },
             dismissButton = {
-                TextButton(
+                OutlinedButton (
                     onClick = { data.onDismiss() }
                 ) {
                     Text(text = stringResource(android.R.string.cancel))

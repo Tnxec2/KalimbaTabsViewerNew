@@ -1,6 +1,7 @@
 package com.kontranik.kalimbatabsviewer2.room.viewmodel
 
 import android.content.Context
+import android.util.Log
 import android.view.View
 import android.widget.EditText
 import androidx.core.view.isVisible
@@ -35,6 +36,12 @@ class KtabRoomViewModel(
         }
     }.asFlow()
 
+    val searchText = songTextFilter.switchMap { filter ->
+        liveData {
+            emit(filter.text)
+        }
+    }.asFlow()
+
     init {
         playlistId?.let {
             playlistIdState.value = it
@@ -66,7 +73,8 @@ class KtabRoomViewModel(
             }.flow
         }.cachedIn(viewModelScope)
 
-    fun changeSearchText(context: Context,text: String?) {
+    fun changeSearchText(context: Context, text: String?) {
+        Log.d("KtabRoomViewModel", "changeSearchText: $text")
         val altVal = this.songTextFilter.value
         if ( altVal == null || altVal.text != text) {
             val defSortParams = SettingsHelper.getDefaultSort(context, true)

@@ -138,14 +138,12 @@ class SyncViewModel(
                 syncState.value = syncState.value.copy(
                     state = SyncStateType.FINISHED,
                 )
-
-
             } catch (e: Exception) {
                 e.printStackTrace()
                 Log.e(TAG, "Error: ${e.message}")
                 syncState.value = syncState.value.copy(
                     state = SyncStateType.FINISHED,
-                    error = e.localizedMessage
+                    error = if (e.message == "timeout") "Timeout. Try again later." else e.message
                 )
             }
         }

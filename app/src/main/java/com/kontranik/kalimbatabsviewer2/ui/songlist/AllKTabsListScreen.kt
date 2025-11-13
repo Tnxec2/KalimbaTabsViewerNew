@@ -30,6 +30,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -44,12 +45,13 @@ import com.kontranik.kalimbatabsviewer2.room.viewmodel.KtabRoomViewModel
 import com.kontranik.kalimbatabsviewer2.room.viewmodel.ToggleFavoritesViewModel
 import com.kontranik.kalimbatabsviewer2.ui.appbar.AppBar
 import com.kontranik.kalimbatabsviewer2.ui.appbar.AppBarAction
+import com.kontranik.kalimbatabsviewer2.ui.common.SearchBox
 import com.kontranik.kalimbatabsviewer2.ui.theme.paddingSmall
 import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun SongListScreen(
+fun AllKTabsListScreen(
     drawerState: DrawerState,
     navigateBack: () -> Unit,
     openSong: (id: String) -> Unit,
@@ -58,6 +60,7 @@ fun SongListScreen(
     toggleFavoritesViewModel: ToggleFavoritesViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -87,7 +90,12 @@ fun SongListScreen(
                     AppBarAction(appBarAction =  AppBarAction(
                         vector = if (showSearch) Icons.Default.SearchOff else Icons.Default.Search,
                         description = R.string.search,
-                        onClick = { showSearch = showSearch.not() }
+                        onClick = {
+                            coroutineScope.launch {
+                                showSearch = showSearch.not()
+                                if (!showSearch) viewModel.changeSearchText(context,"")
+                            }
+                        }
                     ))
                     AppBarAction(appBarAction = AppBarAction(
                         vector = if (showBookmarked.value) Icons.Filled.Star else Icons.Default.StarBorder,
@@ -109,6 +117,18 @@ fun SongListScreen(
         modifier = Modifier.fillMaxSize(),
     ) { padding ->
         Column(Modifier.padding(padding)) {
+            if (showSearch) {
+                val searchQuery = viewModel.searchText.collectAsState("")
+                SearchBox(
+                    queryState = searchQuery.value ?: "",
+                    onChangeSearchQuery = {
+                        coroutineScope.launch {
+                            viewModel.changeSearchText(context,  it)
+                            listState.scrollToItem(0)
+                        }
+                    }
+                )
+            }
             PageSongs(
                 listState,
                 list,
