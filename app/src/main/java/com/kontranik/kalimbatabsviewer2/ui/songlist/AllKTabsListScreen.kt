@@ -2,6 +2,7 @@ package com.kontranik.kalimbatabsviewer2.ui.songlist
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -9,26 +10,37 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
+import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerState
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -46,6 +58,8 @@ import com.kontranik.kalimbatabsviewer2.room.viewmodel.ToggleFavoritesViewModel
 import com.kontranik.kalimbatabsviewer2.ui.appbar.AppBar
 import com.kontranik.kalimbatabsviewer2.ui.appbar.AppBarAction
 import com.kontranik.kalimbatabsviewer2.ui.common.SearchBox
+import com.kontranik.kalimbatabsviewer2.ui.dialogs.SortDialog
+import com.kontranik.kalimbatabsviewer2.ui.theme.paddingMedium
 import com.kontranik.kalimbatabsviewer2.ui.theme.paddingSmall
 import kotlinx.coroutines.launch
 
@@ -64,11 +78,16 @@ fun AllKTabsListScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    var showSearch by rememberSaveable { mutableStateOf(false) }
+    val searchQuery = viewModel.searchText.collectAsState("")
     val listState = rememberLazyListState()
+
+    var showSortDialog by rememberSaveable { mutableStateOf(false) }
+    val currentSort = viewModel.currentSort.collectAsState(null)
 
     val list = viewModel.songsPageByFilter.collectAsLazyPagingItems()
     val showBookmarked = viewModel.showBookmarked.collectAsState(false)
+
+    var expandedMenu by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         snackbarHost = {
@@ -76,8 +95,7 @@ fun AllKTabsListScreen(
         },
         topBar = {
             AppBar (
-                titleString = "Kalimba Tabs"
-                ,
+                titleString = "Kalimba Tabs",
                 drawerState = drawerState,
                 navigationIcon = {
                     IconButton(onClick = { coroutineScope.launch { navigateBack() } }) {
@@ -87,16 +105,6 @@ fun AllKTabsListScreen(
                     }
                 },
                 appBarActions = listOf{
-                    AppBarAction(appBarAction =  AppBarAction(
-                        vector = if (showSearch) Icons.Default.SearchOff else Icons.Default.Search,
-                        description = R.string.search,
-                        onClick = {
-                            coroutineScope.launch {
-                                showSearch = showSearch.not()
-                                if (!showSearch) viewModel.changeSearchText(context,"")
-                            }
-                        }
-                    ))
                     AppBarAction(appBarAction = AppBarAction(
                         vector = if (showBookmarked.value) Icons.Filled.Star else Icons.Default.StarBorder,
                         description = R.string.favorites,
@@ -106,29 +114,50 @@ fun AllKTabsListScreen(
                             }
                         }
                     ))
-                    SyncAppBarAction( onSyncCompleted = {
-                        coroutineScope.launch {
-                            listState.scrollToItem(0)
+                    AppBarAction(appBarAction = AppBarAction(
+                        vector = Icons.AutoMirrored.Default.Sort,
+                        description = R.string.sort,
+                        onClick = {
+                            showSortDialog = true
                         }
-                    }, syncViewModel)
+                    ))
+
+                    AppBarAction(
+                        appBarAction = AppBarAction(
+                            vector = Icons.Filled.MoreVert,
+                            description = R.string.menu,
+                            onClick = { expandedMenu = true }
+                        )
+                    )
+                    DropdownMenu(
+                        expanded = expandedMenu,
+                        onDismissRequest = { expandedMenu = false }
+                    ) {
+                        SyncAppBarAction( onSyncCompleted = {
+                            coroutineScope.launch {
+                                listState.scrollToItem(0)
+                                expandedMenu = false
+                            }
+                        }, syncViewModel, isAppBarAction = false)
+                    }
                 }
             )
         },
         modifier = Modifier.fillMaxSize(),
     ) { padding ->
         Column(Modifier.padding(padding)) {
-            if (showSearch) {
-                val searchQuery = viewModel.searchText.collectAsState("")
-                SearchBox(
-                    queryState = searchQuery.value ?: "",
-                    onChangeSearchQuery = {
-                        coroutineScope.launch {
-                            viewModel.changeSearchText(context,  it)
-                            listState.scrollToItem(0)
-                        }
+
+            SearchBox(
+                queryState = searchQuery.value ?: "",
+                focus = false,
+                onChangeSearchQuery = {
+                    coroutineScope.launch {
+                        viewModel.changeSearchText(  it)
+                        listState.scrollToItem(0)
                     }
-                )
-            }
+                }
+            )
+
             PageSongs(
                 listState,
                 list,
@@ -138,6 +167,12 @@ fun AllKTabsListScreen(
                         toggleFavoritesViewModel.toggleFavorite(it)
                     }
                 }
+            )
+
+            if (showSortDialog && currentSort.value != null) SortDialog(
+                currentSortParams = currentSort.value!!,
+                onDismissRequest = { showSortDialog = false},
+                onConfirm = { viewModel.changeSortColumn(it)}
             )
         }
     }
@@ -151,26 +186,49 @@ fun PageSongs(
     onToggleFavorite: (ktabRoom: KTabRoom) -> Unit,
 ) {
 
+    val coroutineScope = rememberCoroutineScope()
 
-    LazyColumn(
-        state = listState,
-        modifier = Modifier.padding(horizontal = paddingSmall)
-    ) {
-        item {
-            if (ktabs.loadState.append is LoadState.Loading) {
-                CircularProgressIndicator(modifier = Modifier.padding(16.dp))
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = paddingSmall)
+        ) {
+            item {
+                if (ktabs.loadState.append is LoadState.Loading) {
+                    CircularProgressIndicator(modifier = Modifier.padding(16.dp))
+                }
+            }
+            items(
+                count = ktabs.itemCount,
+                key = ktabs.itemKey { item -> item.kTabId }
+            ) { index ->
+                ktabs[index]?.let { ktabRoom ->
+                    KtabItem(ktab = ktabRoom, onOpenKtab = {
+                        openSong(ktabRoom.kTabId)
+                    }, onToggleFavorite = {
+                        onToggleFavorite(ktabRoom)
+                    })
+                }
             }
         }
-        items(
-            count = ktabs.itemCount,
-            key = ktabs.itemKey { item -> item.kTabId }
-        ) { index ->
-            ktabs[index]?.let { ktabRoom ->
-                KtabItem(ktab = ktabRoom, onOpenKtab = {
-                    openSong(ktabRoom.kTabId)
-                }, onToggleFavorite = {
-                    onToggleFavorite(ktabRoom)
-                })
+
+        val showButton by remember {
+            derivedStateOf {
+                // Zeige den Button, wenn mehr als das erste Element gescrollt wurde
+                listState.firstVisibleItemIndex > 1
+            }
+        }
+
+        if (showButton) {
+            FloatingActionButton(
+                onClick = { coroutineScope.launch { listState.scrollToItem(0) } },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(paddingMedium)
+            ) {
+                Icon(imageVector = Icons.Default.ArrowUpward, contentDescription = "Up")
             }
         }
     }

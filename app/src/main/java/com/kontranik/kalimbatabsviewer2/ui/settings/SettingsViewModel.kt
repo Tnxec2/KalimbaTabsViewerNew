@@ -2,9 +2,14 @@ package com.kontranik.kalimbatabsviewer2.ui.settings
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.kontranik.kalimbatabsviewer2.helper.SortHelper
+import com.kontranik.kalimbatabsviewer2.helper.SortHelper.Companion.DEFAULT_SORT_ALL_SONGS
+import com.kontranik.kalimbatabsviewer2.helper.SortHelper.Companion.DEFAULT_SORT_PLAYLISTS
+import com.kontranik.kalimbatabsviewer2.helper.TransposeTypes
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -49,8 +54,6 @@ class SettingsViewModel(
         }
     }
 
-
-
     fun updateFontSize(fontSize: Float) {
         _settingsState.value = _settingsState.value.copy(fontSize = fontSize,)
         sharedPreferences.edit {
@@ -59,12 +62,18 @@ class SettingsViewModel(
         }
     }
 
-
     fun loadSettings(): Settings {
         return Settings(
             lineBreak = sharedPreferences.getBoolean(LINE_BREAK, true),
             fontSize = sharedPreferences.getFloat(FONT_SIZE, 16f),
             interfaceTheme = sharedPreferences.getString(INTERFACE_THEME, INTERFACE_THEME_SYSTEM) ?: INTERFACE_THEME_SYSTEM,
+            tune = sharedPreferences.getString(TRANSPOSE_TUNE, TransposeTypes.NUMBER) ?: TransposeTypes.NUMBER,
+            sortAllSongs = SortHelper.SortParams(
+                sharedPreferences.getString(SortHelper.KEY_DEFAULT_SORT_COLUMN_ALL_SONGS, DEFAULT_SORT_ALL_SONGS.column) ?: DEFAULT_SORT_ALL_SONGS.column,
+                sharedPreferences.getBoolean(SortHelper.KEY_DEFAULT_SORT_ASSCENDING_ALL_SONGS, DEFAULT_SORT_ALL_SONGS.ascending)),
+            sortPlaylists = SortHelper.SortParams(
+                sharedPreferences.getString(SortHelper.KEY_DEFAULT_SORT_COLUMN_PLAYLISTS, DEFAULT_SORT_PLAYLISTS.column) ?: DEFAULT_SORT_PLAYLISTS.column,
+                sharedPreferences.getBoolean(SortHelper.KEY_DEFAULT_SORT_ASSCENDING_PLAYLISTS, DEFAULT_SORT_PLAYLISTS.ascending)),
             hideText = sharedPreferences.getBoolean(HIDE_TEXT, false),
         )
     }
@@ -95,6 +104,50 @@ class SettingsViewModel(
         }
     }
 
+    fun changeDefaultSortAllSongs(s: String) {
+        Log.d("C", s)
+        val sort = SortHelper.SortParams().fromString(s)
+
+        if (sort != null) {
+            Log.d("C", "$s | $sort")
+            _settingsState.value =
+                _settingsState.value.copy(
+                    sortAllSongs = SortHelper.SortParams(sort.column, sort.ascending)
+                )
+
+            sharedPreferences.edit {
+                putString(SortHelper.KEY_DEFAULT_SORT_COLUMN_ALL_SONGS, sort.column)
+                putBoolean(SortHelper.KEY_DEFAULT_SORT_ASSCENDING_ALL_SONGS, sort.ascending)
+                apply()
+            }
+        }
+    }
+
+    fun changeDefaultSortPlaylists(s: String) {
+        val sort = SortHelper.SortParams().fromString(s)
+        if (sort != null) {
+            _settingsState.value =
+                _settingsState.value.copy(
+                    sortPlaylists = SortHelper.SortParams(sort.column, sort.ascending)
+                )
+
+            sharedPreferences.edit {
+                putString(SortHelper.KEY_DEFAULT_SORT_COLUMN_PLAYLISTS, sort.column)
+                putBoolean(SortHelper.KEY_DEFAULT_SORT_ASSCENDING_PLAYLISTS, sort.ascending)
+                apply()
+            }
+        }
+    }
+
+    fun changeTransposeTune(transposeTune: String) {
+        _settingsState.value = _settingsState.value.copy(tune = transposeTune,)
+
+        sharedPreferences.edit {
+            putString(TRANSPOSE_TUNE, transposeTune)
+            apply()
+        }
+    }
+
     fun changeFontSize(fontSize: Float) {
         updateFontSize(fontSize)
     }
@@ -108,6 +161,7 @@ class SettingsViewModel(
 
         const val LINE_BREAK = "line_break"
         const val HIDE_TEXT = "hide_text"
+        const val TRANSPOSE_TUNE = "transpose_tune"
         const val SYNC_BATCH_SIZE = "sync_batch_size"
         const val SYNC_BATCH_SIZE_DEFAULT = 10
         const val FONT_SIZE = "font_size"

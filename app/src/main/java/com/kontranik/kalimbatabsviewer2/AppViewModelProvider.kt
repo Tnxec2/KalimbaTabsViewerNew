@@ -23,10 +23,12 @@ object AppViewModelProvider {
 
         initializer {
             KtabRoomViewModel(
+                application().applicationContext,
                 this.createSavedStateHandle(),
                 application().container.kTabsRepository,
             )
         }
+
         initializer {
             PlaylistViewModel(
                 this.createSavedStateHandle(),

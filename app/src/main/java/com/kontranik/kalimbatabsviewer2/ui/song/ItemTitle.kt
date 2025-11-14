@@ -1,5 +1,6 @@
 package com.kontranik.kalimbatabsviewer2.ui.song
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -15,16 +16,21 @@ import com.kontranik.kalimbatabsviewer2.ui.theme.paddingSmall
 
 @Composable
 fun ItemTitle(kTabRoom: KTabRoom, modifier: Modifier = Modifier.padding(paddingSmall)) {
-    Column(modifier) {
+    Column(
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.Start,
+        modifier = modifier
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(kTabRoom.title, style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.weight(1f))
         }
-        Row() {
-            Text(
-                kTabRoom.interpreter,
-                style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-        }
+        if (kTabRoom.interpreter.isNotEmpty())
+            Row() {
+                Text(
+                    kTabRoom.interpreter,
+                    style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+            }
     }
 }
 

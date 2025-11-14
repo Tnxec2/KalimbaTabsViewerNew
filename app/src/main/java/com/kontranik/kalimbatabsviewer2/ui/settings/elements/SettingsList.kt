@@ -40,7 +40,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsList(
-    entries: List<String>,
+    entryTitles: List<String>,
     entryValues: List<String>,
     defaultValue: String,
     modifier: Modifier = Modifier,
@@ -72,15 +72,18 @@ fun SettingsList(
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.fillMaxWidth()
                 )
-                if (showDefaultValue) Text(
-                    text = defaultValueTitle ?: defaultValue,
-                    modifier = Modifier
-                )
+                if (showDefaultValue) {
+                    val ix = entryValues.indexOf(defaultValue)
+                    Text(
+                        text = defaultValueTitle ?: ( if (ix >= 0) entryTitles[ix] else defaultValue),
+                        modifier = Modifier
+                    )
+                }
             }
 
             SettingsListContent(
                 expanded = showDropdown,
-                entries = entries,
+                entries = entryTitles,
                 defaultPos = entryValues.indexOf(defaultValue),
                 onItemClick = { pos, _ ->
                     if (enabled) onChange(entryValues[pos])
@@ -148,10 +151,10 @@ private fun SettingsTextFieldPreview() {
         Column(Modifier.padding(10.dp).fillMaxSize()) {
             SettingsList(
                 title = "Title",
-                entries = listOf(
-                    "entry 1",
-                    "entry 2",
-                    "entry 3",
+                entryTitles = listOf(
+                    "Entry 1",
+                    "Entry 2",
+                    "Entry 3",
                 ),
                 entryValues = listOf(
                     "entry1",
@@ -165,7 +168,7 @@ private fun SettingsTextFieldPreview() {
             )
             SettingsList(
                 title = "Title",
-                entries = listOf(
+                entryTitles = listOf(
                     "entry 1",
                     "entry 2",
                     "entry 3",
@@ -176,7 +179,6 @@ private fun SettingsTextFieldPreview() {
                     "entry3",
                 ),
                 defaultValue = "entry2",
-                defaultValueTitle = "entry2",
                 showDefaultValue = true,
                 onChange = {},
                 show = true,

@@ -1,15 +1,8 @@
 package com.kontranik.kalimbatabsviewer2.ui.songlist
 
-import android.content.Context
 import android.util.Log
-import android.widget.Toast
-import androidx.compose.ui.text.intl.Locale
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.kontranik.kalimbatabsviewer2.R
-import com.kontranik.kalimbatabsviewer2.helper.BACKEND_URI_SYNC
-import com.kontranik.kalimbatabsviewer2.helper.BACKEND_URI_SYNC_COUNT
-import com.kontranik.kalimbatabsviewer2.helper.SyncHelper.Companion.TAG
 import com.kontranik.kalimbatabsviewer2.helper.fetchData
 import com.kontranik.kalimbatabsviewer2.room.model.KTabRoom
 import com.kontranik.kalimbatabsviewer2.room.repository.KTabsRepository
@@ -20,13 +13,16 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import org.json.JSONObject
-import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.TimeZone
 
-const val BACKEND_URI_SYNC = "https://kalimba-tabs-backend.onrender.com/sync"
-const val BACKEND_URI_SYNC_COUNT = "https://kalimba-tabs-backend.onrender.com/sync/count"
+/*
+backend:
+get page of ktabs
+https://kalimba-tabs-backend.onrender.com
+
+ */
 
 class SyncViewModel(
     private val kTabsRepository: KTabsRepository,
@@ -148,6 +144,12 @@ class SyncViewModel(
             }
         }
 
+    }
+
+    companion object {
+        const val TAG = "SYNC"
+        const val BACKEND_URI_SYNC = "https://kalimba-tabs-backend.onrender.com/sync"
+        const val BACKEND_URI_SYNC_COUNT = "https://kalimba-tabs-backend.onrender.com/sync/count"
     }
 }
 

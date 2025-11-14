@@ -1,9 +1,7 @@
 package com.kontranik.kalimbatabsviewer2.ui.settings
 
 import android.os.Build
-import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
-import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,25 +20,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kontranik.kalimbatabsviewer2.AppViewModelProvider
 import com.kontranik.kalimbatabsviewer2.R
+import com.kontranik.kalimbatabsviewer2.helper.SortHelper
+import com.kontranik.kalimbatabsviewer2.helper.TransposeTypes
+import com.kontranik.kalimbatabsviewer2.helper.TransposeTypes.Companion.TRANSPOSE_ENTRIES
 import com.kontranik.kalimbatabsviewer2.ui.appbar.AppBar
 import com.kontranik.kalimbatabsviewer2.ui.settings.SettingsViewModel.Companion.INTERFACE_ENTRIES
 import com.kontranik.kalimbatabsviewer2.ui.settings.elements.SettingsCard
 import com.kontranik.kalimbatabsviewer2.ui.settings.elements.SettingsList
-import com.kontranik.kalimbatabsviewer2.ui.settings.elements.SettingsTitle
 import com.kontranik.kalimbatabsviewer2.ui.theme.paddingSmall
 import kotlinx.coroutines.launch
 
-data class SettingsItem(
-    @StringRes val title: Int,
-    @DrawableRes val drawable:  Int?,
-    val onClick: () -> Unit,
-)
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -49,12 +43,8 @@ fun SettingsScreen(
     navigateBack: () -> Unit,
     settingsViewModel: SettingsViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
-
     val coroutineScope = rememberCoroutineScope()
-
-    val context = LocalContext.current
     val settingsState = settingsViewModel.settingsState.collectAsState()
-
 
     SettingsContent(
         drawerState = drawerState,
@@ -62,17 +52,28 @@ fun SettingsScreen(
         settingsState = settingsState.value,
         onChangeInterfaceTheme = {
             settingsViewModel.changeInterfaceTheme(it)
+        },
+        onChangeTransposeTune = {
+            settingsViewModel.changeTransposeTune(it)
+        },
+        onChangeDefaultSortAllSongs = {
+            settingsViewModel.changeDefaultSortAllSongs(it)
+        },
+        onChangeDefaultSortPlaylists = {
+            settingsViewModel.changeDefaultSortPlaylists(it)
         }
     )
 }
-
 
 @Composable
 fun SettingsContent(
     drawerState: DrawerState,
     navigateBack: () -> Unit,
     settingsState: Settings,
-    onChangeInterfaceTheme: (String) -> Unit
+    onChangeInterfaceTheme: (String) -> Unit,
+    onChangeTransposeTune: (String) -> Unit,
+    onChangeDefaultSortAllSongs: (String) -> Unit,
+    onChangeDefaultSortPlaylists: (String) -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -94,15 +95,11 @@ fun SettingsContent(
                 .verticalScroll(rememberScrollState())
         ) {
 
-            SettingsTitle(
-                text = stringResource(id = R.string.interface_header),
-                modifier = Modifier.padding(bottom = paddingSmall)
-            )
-            SettingsCard {
+            SettingsCard(title = stringResource(R.string.interface_header), modifier = Modifier.padding(top = paddingSmall)) {
                 SettingsList(
                     title = stringResource(id = R.string.interface_theme_title),
                     entryValues = INTERFACE_ENTRIES,
-                    entries = listOf(
+                    entryTitles = listOf(
                         stringResource(R.string.theme_light),
                         stringResource(R.string.theme_dark),
                         stringResource(R.string.theme_system),
@@ -115,11 +112,42 @@ fun SettingsContent(
                 )
             }
 
-//            if (showBackupDialog) BackupDialog(
-//                context = LocalContext.current,
-//                onChange = {},
-//                onDismiss = {showBackupDialog = false }
-//            )
+            SettingsCard(title = stringResource(R.string.default_tune), modifier = Modifier.padding(top = paddingSmall)) {
+                SettingsList(
+                    title = stringResource(id = R.string.transpose),
+                    entryValues = TRANSPOSE_ENTRIES.map{it.first},
+                    entryTitles = TRANSPOSE_ENTRIES.map{stringResource(it.second)},
+                    defaultValue = settingsState.tune,
+                    defaultValueTitle = TransposeTypes.getFromTitle(settingsState.tune)?.second?.let { stringResource(it) },
+                    icon = R.drawable.ic_baseline_music_note_24,
+                    onChange = { onChangeTransposeTune(it) },
+                    showDefaultValue = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            SettingsCard(title = stringResource(R.string.sort), modifier = Modifier.padding(top = paddingSmall)) {
+                SettingsList(
+                    title = stringResource(id = R.string.default_sort_all_songs),
+                    entryValues = SortHelper.sortSettingsEntries,
+                    entryTitles = SortHelper.sortSettingsValues.map{stringResource(it)},
+                    defaultValue = settingsState.sortAllSongs.toString(),
+                    icon = R.drawable.ic_baseline_sort_24,
+                    onChange = { onChangeDefaultSortAllSongs(it) },
+                    showDefaultValue = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                SettingsList(
+                    title = stringResource(id = R.string.default_sort_playlists),
+                    entryValues = SortHelper.sortSettingsEntries,
+                    entryTitles = SortHelper.sortSettingsValues.map{stringResource(it)},
+                    defaultValue = settingsState.sortPlaylists.toString(),
+                    icon = R.drawable.ic_baseline_sort_24,
+                    onChange = { onChangeDefaultSortPlaylists(it) },
+                    showDefaultValue = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }
@@ -134,7 +162,10 @@ private fun SettingsContentPreview() {
                 drawerState = DrawerState(DrawerValue.Closed),
                 navigateBack = {},
                 settingsState = Settings(),
-                onChangeInterfaceTheme = {}
+                onChangeInterfaceTheme = {},
+                onChangeTransposeTune = {},
+                onChangeDefaultSortAllSongs = {},
+                onChangeDefaultSortPlaylists = {},
             )
         }
 

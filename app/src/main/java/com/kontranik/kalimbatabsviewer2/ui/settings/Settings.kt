@@ -1,5 +1,7 @@
 package com.kontranik.kalimbatabsviewer2.ui.settings
 
+import com.kontranik.kalimbatabsviewer2.helper.SortHelper
+import com.kontranik.kalimbatabsviewer2.helper.TransposeTypes
 import com.kontranik.kalimbatabsviewer2.ui.settings.SettingsViewModel.Companion.INTERFACE_THEME_SYSTEM
 
 
@@ -9,7 +11,10 @@ data class Settings(
     val lineBreak: Boolean = true,
     val fontSize: Float = 12f,
     val interfaceTheme: String = INTERFACE_THEME_SYSTEM,
+    val tune: String = TransposeTypes.NUMBER,
     val hideText: Boolean = false,
+    val sortAllSongs: SortHelper.SortParams = SortHelper.DEFAULT_SORT_ALL_SONGS,
+    val sortPlaylists: SortHelper.SortParams = SortHelper.DEFAULT_SORT_PLAYLISTS
 )
 
 

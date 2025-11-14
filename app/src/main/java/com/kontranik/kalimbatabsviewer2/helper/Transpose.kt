@@ -4,7 +4,7 @@ import java.util.Scanner
 
 class Transpose {
     companion object {
-        private const val PREFIX_TEXT_LINE = ">"
+        const val PREFIX_TEXT_LINE = ">"
         private val tine_numbers : Array<String> = arrayOf( "1", "2", "3", "4", "6", "5", "7")
         private val c_tune : Array<String>       = arrayOf( "C", "D", "E", "F", "A", "G", "B")
         private val g_tune  : Array<String>      = arrayOf( "G", "A", "B", "C", "E", "D", "F#")
@@ -43,11 +43,11 @@ class Transpose {
         fun g_to_number(text: String) = translate(g_tune, tine_numbers, text)
         fun g_to_c(text: String) = translate(g_tune, c_tune, text)
 
-        fun transposeNumber(tune: TransposeTypes, text: String): String {
+        fun transposeNumber(tune: String, text: String): String {
             return when (tune) {
-                TransposeTypes.NUMBER -> text
                 TransposeTypes.C_TUNE -> number_to_c(text)
                 TransposeTypes.G_TUNE -> number_to_g(text)
+                else -> text
             }
         }
     }

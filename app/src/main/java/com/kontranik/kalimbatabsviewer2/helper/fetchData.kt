@@ -11,7 +11,6 @@ import kotlin.time.Duration
 fun fetchData(url: String): String {
     Log.d("FETCH", "Fetching data from: $url")
     val client = OkHttpClient.Builder()
-        .connectTimeout(300L, TimeUnit.SECONDS)
         .build()
 
     val request = Request.Builder()

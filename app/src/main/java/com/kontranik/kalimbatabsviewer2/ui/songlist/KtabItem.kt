@@ -81,13 +81,14 @@ fun KtabItem(
                             text = ktab.title,
                             style = MaterialTheme.typography.titleMedium
                         )
-                        Row(Modifier.fillMaxWidth()) {
-                            Text(
-                                text = ktab.interpreter,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
+                        if (ktab.interpreter.isNotEmpty())
+                            Row(Modifier.fillMaxWidth()) {
+                                Text(
+                                    text = ktab.interpreter,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
                     }
                 }
             }
@@ -128,11 +129,20 @@ fun PreviewSongWithAuthorItem() {
             updated = Date(),
         )
 
-    KtabItem(
-        ktab = ktab,
-        showUpdateTime = true,
-        onOpenKtab = { },
-        onToggleFavorite = {  }
-    )
+    Column {
+        KtabItem(
+            ktab = ktab,
+            showUpdateTime = true,
+            onOpenKtab = { },
+            onToggleFavorite = { }
+        )
+
+        KtabItem(
+            ktab = ktab.copy(interpreter = ""),
+            showUpdateTime = true,
+            onOpenKtab = { },
+            onToggleFavorite = { }
+        )
+    }
 }
 

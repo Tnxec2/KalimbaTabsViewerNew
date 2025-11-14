@@ -20,28 +20,33 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.kontranik.kalimbatabsviewer2.helper.Transpose
+import com.kontranik.kalimbatabsviewer2.helper.Transpose.Companion.PREFIX_TEXT_LINE
+import com.kontranik.kalimbatabsviewer2.helper.TransposeTypes
 import com.kontranik.kalimbatabsviewer2.room.model.KTabRoom
 import com.kontranik.kalimbatabsviewer2.ui.settings.Settings
 
 
 fun formatedText(
-    text: String?,
+    text: String,
+    tune: String,
     hideText: Boolean = false
 ): AnnotatedString {
 
 
     return AnnotatedString.fromHtml(
         "<tt>" +
-                (text?.lines()
-                    ?.filter { line -> (!hideText || !line.startsWith(">")) }
-                    ?.map { line ->
-                    if (line.startsWith(">"))
-                            line.removePrefix(">")
-                    else
-                        line
-                }
-                    ?.map{ l -> l.replace(" ", "&nbsp;")} // replace spaces with &nbsp;
-                    ?.joinToString("\n") { l -> "$l<br/>" } ?: "")
+                Transpose.transposeNumber(tune, text)
+                    .lines()
+                    .filter { line -> (!hideText || !line.startsWith(PREFIX_TEXT_LINE)) }
+                    .map { line ->
+                        if (line.startsWith(PREFIX_TEXT_LINE))
+                                line.removePrefix(PREFIX_TEXT_LINE)
+                        else
+                            line
+                    }
+                    .map{ l -> l.replace(" ", "&nbsp;")} // replace spaces with &nbsp;
+                    .joinToString("\n") { l -> "$l<br/>" }
                 + "</tt>"
     )
 }
@@ -58,6 +63,7 @@ fun KTabRoomText(
         mutableStateOf(
             formatedText(
                 text = uiState.value.text,
+                tune =  TransposeTypes.NUMBER,
                 settings.value.hideText
             )
         )

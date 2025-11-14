@@ -2,6 +2,7 @@ package com.kontranik.kalimbatabsviewer2.ui.playlist
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,10 +11,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
+import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DrawerState
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -22,12 +29,14 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -49,7 +58,9 @@ import com.kontranik.kalimbatabsviewer2.ui.appbar.AppBarAction
 import com.kontranik.kalimbatabsviewer2.ui.common.ConfirmDialog
 import com.kontranik.kalimbatabsviewer2.ui.common.ConfirmDialogData
 import com.kontranik.kalimbatabsviewer2.ui.common.EditDialog
+import com.kontranik.kalimbatabsviewer2.ui.dialogs.SortDialog
 import com.kontranik.kalimbatabsviewer2.ui.songlist.KtabItem
+import com.kontranik.kalimbatabsviewer2.ui.theme.paddingMedium
 import kotlinx.coroutines.launch
 
 
@@ -73,6 +84,11 @@ fun PlaylistKtabsScreen(
     var showDelete by rememberSaveable { mutableStateOf(false) }
     var showEdit by rememberSaveable { mutableStateOf(false) }
 
+    var showSortDialog by rememberSaveable { mutableStateOf(false) }
+    val currentSort = ktabRoomViewModel.currentSort.collectAsState(null)
+
+    var expandedMenu by rememberSaveable { mutableStateOf(false) }
+
     Scaffold(
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
@@ -92,20 +108,47 @@ fun PlaylistKtabsScreen(
                     }
                 },
                 appBarActions = listOf{
+                    AppBarAction(appBarAction = AppBarAction(
+                        vector = Icons.AutoMirrored.Default.Sort,
+                        description = R.string.sort,
+                        onClick = {
+                            showSortDialog = true
+                        }
+                    ))
                     AppBarAction(
                         appBarAction = AppBarAction(
-                            vector = Icons.Default.Edit,
-                            description = R.string.edit,
+                            vector = Icons.Filled.MoreVert,
+                            description = R.string.menu,
+                            onClick = { expandedMenu = true }
+                        )
+                    )
+                    DropdownMenu(
+                        expanded = expandedMenu,
+                        onDismissRequest = { expandedMenu = false }
+                    ) {
+                        DropdownMenuItem(text = {
+                            Text(stringResource(R.string.edit))
+                        },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = stringResource(R.string.edit)
+                                )
+                            },
                             onClick = { showEdit = true }
                         )
-                    )
-                    AppBarAction(
-                        appBarAction = AppBarAction(
-                            vector = Icons.Default.Delete,
-                            description = R.string.delete_playlist,
+                        DropdownMenuItem(text = {
+                            Text(stringResource(R.string.delete_playlist))
+                        },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = stringResource(R.string.delete_playlist)
+                                )
+                            },
                             onClick = { showDelete = true }
                         )
-                    )
+                    }
                 }
             )
         },
@@ -159,6 +202,12 @@ fun PlaylistKtabsScreen(
             )
 
         }
+
+        if (showSortDialog && currentSort.value != null) SortDialog(
+            currentSortParams = currentSort.value!!,
+            onDismissRequest = { showSortDialog = false},
+            onConfirm = { ktabRoomViewModel.changeSortColumn(it)}
+        )
     }
 
 }
@@ -172,33 +221,60 @@ private fun PlaylistSongs(
 ) {
     val listState = rememberLazyListState()
 
-    LazyColumn(state = listState, modifier = Modifier
-        .padding(horizontal = 16.dp)
-        .fillMaxWidth()) {
-        items(
-            count = ktabs.itemCount,
-            key = ktabs.itemKey { item -> item.kTabId }
-        ) { index ->
-            ktabs[index]?.let { ktab ->
-                KtabItem (
-                    ktab = ktab,
-                    onOpenKtab = { openKtab(ktab.kTabId) },
-                    onToggleFavorite = { onToggleFavorite(ktab) },
-                    contextMenu = listOf{
-                        DropdownMenuItem(
-                            text = {
-                                Text(stringResource(R.string.remove_from_playlist))
-                            },
-                            leadingIcon = {Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = stringResource(R.string.remove_from_playlist)
-                            )},
-                            onClick = {
-                                onDelete(ktab.kTabId)
-                            }
-                        )
-                    }
-                )
+    val coroutineScope = rememberCoroutineScope()
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+        ) {
+            items(
+                count = ktabs.itemCount,
+                key = ktabs.itemKey { item -> item.kTabId }
+            ) { index ->
+                ktabs[index]?.let { ktab ->
+                    KtabItem(
+                        ktab = ktab,
+                        onOpenKtab = { openKtab(ktab.kTabId) },
+                        onToggleFavorite = { onToggleFavorite(ktab) },
+                        contextMenu = listOf {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(stringResource(R.string.remove_from_playlist))
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = stringResource(R.string.remove_from_playlist)
+                                    )
+                                },
+                                onClick = {
+                                    onDelete(ktab.kTabId)
+                                }
+                            )
+                        }
+                    )
+                }
+            }
+        }
+
+        val showButton by remember {
+            derivedStateOf {
+                // Zeige den Button, wenn mehr als das erste Element gescrollt wurde
+                listState.firstVisibleItemIndex > 0
+            }
+        }
+
+        if (showButton) {
+            FloatingActionButton (
+                onClick = { coroutineScope.launch { listState.scrollToItem(0) } },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(paddingMedium)
+            ) {
+                Icon(imageVector = Icons.Default.ArrowUpward, contentDescription = "Up")
             }
         }
     }

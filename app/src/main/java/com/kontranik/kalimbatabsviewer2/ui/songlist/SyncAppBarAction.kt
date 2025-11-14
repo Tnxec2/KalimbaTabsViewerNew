@@ -6,8 +6,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -39,7 +42,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun SyncAppBarAction(
     onSyncCompleted: () -> Unit = {},
-    syncViewModel: SyncViewModel
+    syncViewModel: SyncViewModel,
+    isAppBarAction: Boolean = true
 ) {
     val syncMessage = syncViewModel.syncMessage.collectAsState(null)
     val syncState = syncViewModel.syncState.collectAsState()
@@ -48,6 +52,7 @@ fun SyncAppBarAction(
     val coroutineScope = rememberCoroutineScope()
 
     var confirmDialogData by remember { mutableStateOf(ConfirmDialogData()) }
+    if (isAppBarAction)
         AppBarAction(
             appBarAction = AppBarAction(
                 vector = Icons.Default.Sync,
@@ -68,7 +73,36 @@ fun SyncAppBarAction(
                     }
                 )
                 }
-            ))
+            )
+        )
+    else
+        DropdownMenuItem(text = {
+            Text(stringResource(R.string.sync))
+        },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Sync,
+                    contentDescription = stringResource(R.string.sync)
+                )
+            },
+            onClick = {
+                confirmDialogData = ConfirmDialogData(
+                    show = true,
+                    title = context.getString(R.string.sync_songs),
+                    text = context.getString(R.string.do_you_want_to_sync_songs),
+                    onConfirm = {
+                        confirmDialogData = ConfirmDialogData()
+                        coroutineScope.launch {
+                            syncViewModel.syncSongs()
+                            onSyncCompleted()
+                        }
+                    },
+                    onDismiss = {
+                        confirmDialogData = ConfirmDialogData()
+                    }
+                )
+            }
+        )
 
     ConfirmDialog(
         data = confirmDialogData

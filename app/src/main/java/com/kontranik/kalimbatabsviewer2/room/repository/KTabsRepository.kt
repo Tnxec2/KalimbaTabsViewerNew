@@ -58,8 +58,13 @@ class KTabsRepository(private val kTabsDao: KTabsDao) {
     }
 
     fun addKtabToPlaylist(songId: String, playlistId: Long) {
-        kTabsDao.addKtabToPlaylist(songId, playlistId)
+        try {
+            kTabsDao.addKtabToPlaylist(songId, playlistId)
+        } catch (e: Exception) {
+
+        }
     }
+
 
     fun getSongsForPlaylistId(playlistId: Long): PagingSource<Int, KTabRoom> {
         return kTabsDao.getSongsForPlaylistId(playlistId)

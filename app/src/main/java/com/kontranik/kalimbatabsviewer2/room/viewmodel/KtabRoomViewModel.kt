@@ -12,8 +12,7 @@ import androidx.paging.cachedIn
 import androidx.paging.liveData
 import com.kontranik.kalimbatabsviewer2.room.model.KTabRoom
 import com.kontranik.kalimbatabsviewer2.room.repository.KTabsRepository
-import com.kontranik.kalimbatabsviewer2.ui.dialogs.SortParams
-import com.kontranik.kalimbatabsviewer2.ui.settings.SettingsHelper
+import com.kontranik.kalimbatabsviewer2.helper.SortHelper
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -21,6 +20,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 
 class KtabRoomViewModel(
+    private val context: Context,
     savedStateHandle: SavedStateHandle,
     private val repository: KTabsRepository,
 ) : ViewModel() {
@@ -28,7 +28,7 @@ class KtabRoomViewModel(
     private val playlistId: Long? = savedStateHandle["playlistId"]
     var playlistIdState = MutableStateFlow<Long?>(null)
 
-    private val songTextFilter = MutableLiveData<SongTextFilter>(SongTextFilter("", "updated", false, bookmarked = false))
+    private val songTextFilter = MutableLiveData<SongTextFilter>()
 
     val showBookmarked = songTextFilter.switchMap { filter ->
         liveData {
@@ -42,16 +42,23 @@ class KtabRoomViewModel(
         }
     }.asFlow()
 
+    val currentSort = songTextFilter.switchMap { filter ->
+        liveData {
+            emit(SortHelper.SortParams(filter.sort, filter.ascending))
+        }
+    }.asFlow()
+
     init {
         playlistId?.let {
             playlistIdState.value = it
         }
+
+        initSort()
     }
 
     val songsPageByFilter = songTextFilter.switchMap {
         filter -> getPageByFilter(filter)
     }.asFlow().cachedIn(viewModelScope)
-
 
     private fun getPageByFilter(songTextFilter: SongTextFilter) = Pager(PagingConfig(pageSize = 15)) {
         repository.pageKtabs(songTextFilter.bookmarked, songTextFilter.text, songTextFilter.sort, songTextFilter.ascending) }
@@ -73,41 +80,37 @@ class KtabRoomViewModel(
             }.flow
         }.cachedIn(viewModelScope)
 
-    fun changeSearchText(context: Context, text: String?) {
+    fun changeSearchText(text: String?) {
         Log.d("KtabRoomViewModel", "changeSearchText: $text")
         val altVal = this.songTextFilter.value
         if ( altVal == null || altVal.text != text) {
-            val defSortParams = SettingsHelper.getDefaultSort(context, true)
+            val defSort = SortHelper.getDefaultSort(context, playlistId == null)
             this.songTextFilter.postValue(SongTextFilter(
                 text = text,
-                sort = altVal?.sort ?: defSortParams.column,
-                ascending = altVal?.ascending ?: defSortParams.ascending,
+                sort = altVal?.sort ?: defSort.column,
+                ascending = altVal?.ascending ?: defSort.ascending,
                 bookmarked = altVal?.bookmarked ?: false
             ))
         }
     }
 
-    fun changeSortColumn(column: String, ascending: Boolean) {
+    fun changeSortColumn(sortParam: SortHelper.SortParams) {
         val altVal = this.songTextFilter.value
-        if ( altVal == null || altVal.sort != column || altVal.ascending != ascending) {
+        if ( altVal == null || altVal.sort != sortParam.column || altVal.ascending != sortParam.ascending) {
             this.songTextFilter.postValue(
                 SongTextFilter(
                     text = altVal?.text,
-                    sort = column,
-                    ascending = ascending,
+                    sort = sortParam.column,
+                    ascending = sortParam.ascending,
                     bookmarked = altVal?.bookmarked ?: false
                 )
             )
         }
     }
 
-    private fun getSearchText(): String? {
-        return songTextFilter.value?.text
-    }
-
-    private fun getSortParams(context: Context): SortParams {
-        val defSortParams = SettingsHelper.getDefaultSort(context, true)
-        return SortParams(songTextFilter.value?.sort ?: defSortParams.column, songTextFilter.value?.ascending ?: defSortParams.ascending)
+    private fun getSortParams(context: Context): SortHelper.SortParams {
+        val defSort = SortHelper.getDefaultSort(context, playlistId == null)
+        return SortHelper.SortParams(songTextFilter.value?.sort ?: defSort.column, songTextFilter.value?.ascending ?: defSort.ascending)
     }
 
     private fun getById(kTabId: String): KTabRoom? {
@@ -127,12 +130,10 @@ class KtabRoomViewModel(
     }
 
     fun updateOrInsert(lastDocument: KTabRoom) {
-
         viewModelScope.launch {
             val ktabInDatabase = getById(lastDocument.kTabId)
 
             if (ktabInDatabase != null && ktabInDatabase.kTabId == lastDocument.kTabId) {
-
                 ktabInDatabase.title = lastDocument.title
                 ktabInDatabase.interpreter = lastDocument.interpreter
                 ktabInDatabase.difficulty = lastDocument.difficulty
@@ -149,7 +150,6 @@ class KtabRoomViewModel(
 
     }
 
-
 //    fun openSortDialog(context: Context) {
 //        val sortListener = object : SortDialog.DialogListener {
 //            override fun ready(sortParams: SortDialog.SortParams) {
@@ -163,22 +163,17 @@ class KtabRoomViewModel(
 //        mSortDialog.show()
 //    }
 
-    fun toggleSearchSong(searchView: View, editText: EditText) {
-        if (searchView.isVisible) {
-            searchView.visibility = View.GONE
-        } else {
-            searchView.visibility = View.VISIBLE
-        }
-        if (getSearchText() != null) {
-            editText.text = null
-            changeSearchText(editText.context, null)
-        }
-    }
 
     fun toggleShowBookmarked() {
         songTextFilter.value?.let {
             songTextFilter.value = it.copy(bookmarked = !it.bookmarked)
         }
+    }
+
+    fun initSort() {
+        Log.d("KtabRoomViewModel", "init sort")
+        val defSort = SortHelper.getDefaultSort(context, playlistId == null)
+        songTextFilter.value = SongTextFilter("", defSort.column, defSort.ascending, bookmarked = false)
     }
 
 

@@ -32,6 +32,7 @@ import kotlinx.coroutines.launch
 fun SearchBox(
     queryState: String,
     minLength: Int = 2,
+    focus: Boolean = true,
     onChangeSearchQuery: (query: String?) -> Unit
     ){
     val coroutineScope = rememberCoroutineScope()
@@ -41,7 +42,7 @@ fun SearchBox(
 
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
+        if (focus) focusRequester.requestFocus()
     }
 
     Row(

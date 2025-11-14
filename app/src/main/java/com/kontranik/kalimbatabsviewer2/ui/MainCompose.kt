@@ -3,8 +3,10 @@ package com.kontranik.kalimbatabsviewer2.ui
 import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
+import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.Settings
@@ -15,6 +17,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -50,15 +53,15 @@ fun MainCompose(
             scope.launch { navController.popBackStack() }
     }
 
-    // val interfaceTheme =  // settingsViewModel.interfaceTheme.collectAsState(GlobalSettingsViewModel.INTERFACE_THEME_LIGHT)
+     val interfaceTheme =  settingsViewModel.interfaceTheme.collectAsState(SettingsViewModel.INTERFACE_THEME_LIGHT)
 
-//    val darkTheme = when (interfaceTheme.value) {
-//        GlobalSettingsViewModel.INTERFACE_THEME_LIGHT -> DarkTheme(false)
-//        GlobalSettingsViewModel.INTERFACE_THEME_DARK -> DarkTheme(true)
-//        else -> DarkTheme(isSystemInDarkTheme())
-//    }
+    val darkTheme = when (interfaceTheme.value) {
+        SettingsViewModel.INTERFACE_THEME_LIGHT -> DarkTheme(false)
+        SettingsViewModel.INTERFACE_THEME_DARK -> DarkTheme(true)
+        else -> DarkTheme(isSystemInDarkTheme())
+    }
 
-    CompositionLocalProvider(LocalTheme provides DarkTheme(false)) {
+    CompositionLocalProvider(LocalTheme provides darkTheme) {
         KalimbaTabsViewer2Theme(darkTheme = LocalTheme.current.isDark)
         {
             Surface {
@@ -120,7 +123,7 @@ object DrawerParams {
         AppDrawerItemInfo(
             drawerOption =  MainNavOption.Playlist,
             descriptionId = R.string.playlists,
-            imageVector = Icons.Default.PlaylistPlay,
+            imageVector = Icons.AutoMirrored.Default.PlaylistPlay,
             title = R.string.playlists
         ),
         AppDrawerItemInfo(
