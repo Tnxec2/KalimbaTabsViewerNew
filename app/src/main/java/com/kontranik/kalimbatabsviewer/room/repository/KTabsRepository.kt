@@ -53,7 +53,7 @@ class KTabsRepository(private val kTabsDao: KTabsDao) {
 
     @WorkerThread
     fun getFlowById(kTabId: String): Flow<KTabRoom?> {
-        return kTabsDao.getFlowById(kTabId)
+        return kTabsDao.getByIdFlow(kTabId)
     }
 
     fun addKtabToPlaylist(songId: String, playlistId: Long) {

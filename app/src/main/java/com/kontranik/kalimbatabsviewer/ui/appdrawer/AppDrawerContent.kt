@@ -14,17 +14,18 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.kontranik.kalimbatabsviewer.ui.DrawerParams
-import com.kontranik.kalimbatabsviewer.ui.MainNavOption
+import com.kontranik.kalimbatabsviewer.ui.Screen
+
 import com.kontranik.kalimbatabsviewer.ui.theme.paddingMedium
 
 import kotlinx.coroutines.launch
 
 @Composable
-fun <T : Enum<T>> AppDrawerContent(
+fun AppDrawerContent(
     drawerState: DrawerState,
-    menuItems: List<AppDrawerItemInfo<T>>,
-    defaultPick: T,
-    onClick: (T) -> Unit
+    menuItems: List<AppDrawerItemInfo>,
+    defaultPick: Screen,
+    onClick: (Screen) -> Unit
 ) {
     //var currentPick by remember { mutableStateOf(defaultPick) }
     val coroutineScope = rememberCoroutineScope()
@@ -66,7 +67,7 @@ private fun AppDrawerContentPreview() {
         AppDrawerContent(
             rememberDrawerState(initialValue = DrawerValue.Open),
             menuItems = DrawerParams.drawerButtons,
-            defaultPick = MainNavOption.KTabList
+            defaultPick = Screen.KTabList
         ) { }
     }
 }

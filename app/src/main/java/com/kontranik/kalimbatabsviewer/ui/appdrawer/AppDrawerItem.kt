@@ -10,11 +10,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.kontranik.kalimbatabsviewer.ui.Screen
 import com.kontranik.kalimbatabsviewer.ui.theme.paddingMedium
 
 
 @Composable
-fun <T> AppDrawerItem(item: AppDrawerItemInfo<T>, onClick: (options: T) -> Unit) =
+fun AppDrawerItem(item: AppDrawerItemInfo, onClick: (options: Screen) -> Unit) =
     Surface(
         color = MaterialTheme.colorScheme.onPrimary,
         modifier = Modifier

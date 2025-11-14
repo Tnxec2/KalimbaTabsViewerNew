@@ -27,7 +27,7 @@ fun NavGraphBuilder.mainGraph(
     settingsViewModel: SettingsViewModel,
 ) {
 
-    val start = MainNavOption.KTabList.name
+    val start = Screen.KTabList.route
 
     navigation(
         startDestination = start,
@@ -35,7 +35,7 @@ fun NavGraphBuilder.mainGraph(
     ) {
 
         composable(
-            route = MainNavOption.KTabList.name,
+            route = Screen.KTabList.route,
         ) {
             val coroutineScope = rememberCoroutineScope()
             AllKTabsListScreen(
@@ -46,8 +46,8 @@ fun NavGraphBuilder.mainGraph(
                     }
                 },
                 openSong = { ktabid ->
-                    navController.navigate("${MainNavOption.KTab.name}/${ktabid}") {
-                        popUpTo(MainNavOption.KTab.name) {
+                    navController.navigate(Screen.KTabDetails.createRoute(ktabid)) {
+                        popUpTo(Screen.KTabDetails.route) {
                             saveState = true
                         }
                         restoreState = true
@@ -58,7 +58,7 @@ fun NavGraphBuilder.mainGraph(
         }
 
         composable(
-            route = "${MainNavOption.KTab.name}/{ktabid}",
+            route = Screen.KTabDetails.route,
             arguments = listOf(navArgument("ktabid") { type = NavType.StringType })
         ) {
             KtabDetailScreen(
@@ -68,7 +68,7 @@ fun NavGraphBuilder.mainGraph(
             )
         }
 
-        composable(MainNavOption.Playlist.name) {
+        composable(Screen.Playlist.route) {
             val coroutineScope = rememberCoroutineScope()
             PlaylistListScreen(
                 drawerState = drawerState,
@@ -78,8 +78,8 @@ fun NavGraphBuilder.mainGraph(
                     }
                 },
                 openPlaylist = { playlistId ->
-                    navController.navigate("${MainNavOption.PlaylistKtabList.name}/${playlistId}") {
-                        popUpTo(MainNavOption.PlaylistKtabList.name) {
+                    navController.navigate(Screen.PlaylistKtabList.createRoute(playlistId)) {
+                        popUpTo(Screen.PlaylistKtabList.route) {
                             saveState = true
                         }
                         restoreState = true
@@ -90,15 +90,15 @@ fun NavGraphBuilder.mainGraph(
         }
 
         composable(
-            route = "${MainNavOption.PlaylistKtabList.name}/{playlistId}",
+            route = Screen.PlaylistKtabList.route,
             arguments = listOf(navArgument("playlistId") { type = NavType.LongType })
         ) {
             PlaylistKtabsScreen(
                 drawerState = drawerState,
                 navigateBack = { navController.navigateUp() },
                 openKtab = { ktabid ->
-                    navController.navigate("${MainNavOption.KTab.name}/${ktabid}") {
-                        popUpTo(MainNavOption.KTab.name) {
+                    navController.navigate(Screen.KTabDetails.createRoute(ktabid)) {
+                        popUpTo(Screen.KTabDetails.route) {
                             saveState = true
                         }
                         restoreState = true
@@ -110,7 +110,7 @@ fun NavGraphBuilder.mainGraph(
 
 
         composable(
-            route = MainNavOption.Settings.name,
+            route = Screen.Settings.route,
         ) {
             val coroutineScope = rememberCoroutineScope()
             SettingsScreen(
@@ -124,12 +124,4 @@ fun NavGraphBuilder.mainGraph(
             )
         }
     }
-}
-
-enum class MainNavOption {
-    KTabList,
-    KTab,
-    Playlist,
-    PlaylistKtabList,
-    Settings,
 }

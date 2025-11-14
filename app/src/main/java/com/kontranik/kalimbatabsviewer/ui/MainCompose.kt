@@ -1,6 +1,7 @@
 package com.kontranik.kalimbatabsviewer.ui
 
 import android.os.Build
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -70,16 +71,17 @@ fun MainCompose(
                         AppDrawerContent(
                             drawerState = drawerState,
                             menuItems = DrawerParams.drawerButtons,
-                            defaultPick = MainNavOption.KTabList
+                            defaultPick = Screen.KTabList
                         ) { onUserPickedOption ->
                             when (onUserPickedOption) {
-                                MainNavOption.KTabList,
-                                MainNavOption.KTab,
-                                MainNavOption.Playlist,
-                                MainNavOption.PlaylistKtabList,
-                                MainNavOption.Settings
+                                Screen.KTabList,
+                                Screen.KTabDetails,
+                                Screen.Playlist,
+                                Screen.PlaylistKtabList,
+                                Screen.Settings
                                     -> {
-                                    navController.navigate(onUserPickedOption.name) {
+                                    Log.d("PICK", "MainCompose: ${onUserPickedOption.route}")
+                                    navController.navigate(onUserPickedOption.route) {
                                         launchSingleTop = true
                                         restoreState = true
                                         popUpTo(NavRoutes.MainRoute.name) {
@@ -113,19 +115,19 @@ enum class NavRoutes {
 object DrawerParams {
     val drawerButtons = arrayListOf(
         AppDrawerItemInfo(
-            drawerOption =  MainNavOption.KTabList,
+            drawerOption =  Screen.KTabList,
             descriptionId = R.string.menu_all_songs,
             imageVector = Icons.AutoMirrored.Filled.LibraryBooks,
             title = R.string.menu_all_songs
         ),
         AppDrawerItemInfo(
-            drawerOption =  MainNavOption.Playlist,
+            drawerOption =  Screen.Playlist,
             descriptionId = R.string.playlists,
             imageVector = Icons.AutoMirrored.Default.PlaylistPlay,
             title = R.string.playlists
         ),
         AppDrawerItemInfo(
-            drawerOption =  MainNavOption.Settings,
+            drawerOption =  Screen.Settings,
             descriptionId = R.string.settings,
             imageVector = Icons.Default.Settings,
             title = R.string.settings

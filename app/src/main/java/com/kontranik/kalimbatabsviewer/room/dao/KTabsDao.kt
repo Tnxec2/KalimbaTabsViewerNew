@@ -21,19 +21,31 @@ interface KTabsDao {
         searchText: String?,
         sortColumn: String,
         sortAscending: Boolean): PagingSource<Int, KTabRoom> {
-        val where = StringBuilder("")
-        if (showOnlyBookmarked) where.append(" WHERE bookmarked = 1 ")
+        val whereClauses = mutableListOf<String>()
+        val whereObjects = mutableListOf<Any>()
+
+        if (showOnlyBookmarked) whereClauses.add("bookmarked = 1")
         if (searchText != null && searchText.isNotEmpty()) {
-            if (where.isBlank()) where.append(" WHERE ")
-            else where.append(" AND ")
-            where.append(" LOWER(title) LIKE LOWER('%$searchText%') OR LOWER(interpreter) LIKE LOWER('%$searchText%') ")
+            whereClauses.add("(LOWER(title) LIKE LOWER(:searchText) OR LOWER(interpreter) LIKE LOWER(:searchText))")
+            whereObjects.add("%$searchText%")
         }
-        var sortQ = "ORDER BY LOWER($sortColumn) ${if (sortAscending) "ASC" else "DESC "}"
-        if (sortColumn != "title") {
-            sortQ += ", title ASC "
+        val where = if (whereClauses.isNotEmpty()) whereClauses.joinToString(separator = " AND ", prefix = "WHERE ") else ""
+
+        val sortOrder = if (sortAscending) "ASC" else "DESC"
+        // Schutz vor SQL-Injection in Spaltennamen
+        val safeSortColumn = when (sortColumn) {
+            "title", "interpreter", "difficulty", "updated" -> sortColumn
+            else -> "title" // Standard-Sortierung als Fallback
         }
+
+        var sortQ = "ORDER BY LOWER($safeSortColumn) $sortOrder"
+        if (safeSortColumn != "title") {
+            sortQ += ", LOWER(title) ASC"
+        }
+
         val statement = "SELECT * FROM ktabs_table $where $sortQ"
-        val query = SimpleSQLiteQuery(statement)
+        val query = SimpleSQLiteQuery(statement, whereObjects.toTypedArray())
+
         Log.d("query", query.sql)
         return getPagedSongsViaQuery(query)
     }
@@ -58,7 +70,7 @@ interface KTabsDao {
     fun getById(id: String): KTabRoom?
 
     @Query("SELECT * FROm ktabs_table WHERE kTabId = :id")
-    fun getFlowById(id: String): Flow<KTabRoom?>
+    fun getByIdFlow(id: String): Flow<KTabRoom?>
 
     @Query("INSERT INTO playlist_ktab_cross_ref (playlistId, kTabId) VALUES (:playlistId, :ktabId)")
     fun addKtabToPlaylist(ktabId: String, playlistId: Long)
