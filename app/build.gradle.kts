@@ -6,15 +6,16 @@ plugins {
 }
 
 android {
-    namespace = "com.kontranik.kalimbatabsviewer2"
+    namespace = "com.kontranik.kalimbatabsviewer"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.kontranik.kalimbatabsviewer2"
+        applicationId = "com.kontranik.kalimbatabsviewer"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.1"
+        setProperty("archivesBaseName", "$applicationId-v$versionCode($versionName)")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

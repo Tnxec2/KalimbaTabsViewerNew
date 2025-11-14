@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "KalimbaTabsViewer2"
+rootProject.name = "KalimbaTabsViewer"
 include(":app")
  
