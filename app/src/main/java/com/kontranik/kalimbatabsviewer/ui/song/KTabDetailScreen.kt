@@ -65,7 +65,7 @@ fun KtabDetailScreen(
     var expandedMenu by rememberSaveable { mutableStateOf(false) }
     var showPlayListDialog by rememberSaveable { mutableStateOf(false) }
 
-    var settings = settingsViewModel.settingsState.collectAsStateWithLifecycle()
+    val settings = settingsViewModel.settingsState.collectAsStateWithLifecycle()
 
     Scaffold(
         snackbarHost = {

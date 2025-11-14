@@ -2,9 +2,15 @@ package com.kontranik.kalimbatabsviewer.ui.songlist
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -22,9 +28,11 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -99,7 +107,8 @@ fun AllKTabsListScreen(
                     }
                 },
                 appBarActions = listOf{
-                    AppBarAction(appBarAction = AppBarAction(
+                    AppBarAction(
+                        AppBarAction(
                         vector = if (showBookmarked.value) Icons.Filled.Star else Icons.Default.StarBorder,
                         description = R.string.favorites,
                         onClick = {
@@ -108,7 +117,8 @@ fun AllKTabsListScreen(
                             }
                         }
                     ))
-                    AppBarAction(appBarAction = AppBarAction(
+                    AppBarAction(
+                        AppBarAction(
                         vector = Icons.AutoMirrored.Default.Sort,
                         description = R.string.sort,
                         onClick = {
@@ -117,7 +127,7 @@ fun AllKTabsListScreen(
                     ))
 
                     AppBarAction(
-                        appBarAction = AppBarAction(
+                        AppBarAction(
                             vector = Icons.Filled.MoreVert,
                             description = R.string.menu,
                             onClick = { expandedMenu = true }
@@ -140,17 +150,24 @@ fun AllKTabsListScreen(
         modifier = Modifier.fillMaxSize(),
     ) { padding ->
         Column(Modifier.padding(padding)) {
-
-            SearchBox(
-                queryState = searchQuery.value ?: "",
-                focus = false,
-                onChangeSearchQuery = {
-                    coroutineScope.launch {
-                        viewModel.changeSearchText(  it)
-                        listState.scrollToItem(0)
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = paddingSmall, vertical = paddingSmall),
+                shape = MaterialTheme.shapes.small, // Abgerundete Ecken
+                shadowElevation = 3.dp // Leichter Schatten
+            ) {
+                SearchBox(
+                    queryState = searchQuery.value ?: "",
+                    focus = false,
+                    onChangeSearchQuery = {
+                        coroutineScope.launch {
+                            viewModel.changeSearchText(it)
+                            listState.scrollToItem(0)
+                        }
                     }
-                }
-            )
+                )
+            }
 
             PageSongs(
                 listState,
@@ -215,11 +232,17 @@ fun PageSongs(
             }
         }
 
-        if (showButton) {
+
+        AnimatedVisibility(
+            visible = showButton,
+            enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
+            exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+        ) {
             FloatingActionButton(
                 onClick = { coroutineScope.launch { listState.scrollToItem(0) } },
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
                     .padding(paddingMedium)
             ) {
                 Icon(imageVector = Icons.Default.ArrowUpward, contentDescription = "Up")

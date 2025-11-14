@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,10 +14,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,30 +30,45 @@ import com.kontranik.kalimbatabsviewer.helper.Transpose.Companion.PREFIX_TEXT_LI
 import com.kontranik.kalimbatabsviewer.helper.TransposeTypes
 import com.kontranik.kalimbatabsviewer.room.model.KTabRoom
 import com.kontranik.kalimbatabsviewer.ui.settings.Settings
+import kotlin.text.append
 
+private val TextStyle = SpanStyle(fontFamily = FontFamily.Monospace)
 
 fun formatedText(
     text: String,
     tune: String,
+    noteColor: Color,
     hideText: Boolean = false
 ): AnnotatedString {
+    val noteStyle = SpanStyle(color = noteColor, fontFamily = FontFamily.Monospace)
 
+// Verwenden Sie den modernen Builder für bessere Kontrolle und Performance
+    return buildAnnotatedString {
+        // Setzen Sie den Stil für den gesamten Textblock
+        withStyle(style = SpanStyle(fontFamily = FontFamily.Monospace)) {
+            val processedText = Transpose.transposeNumber(tune, text)
 
-    return AnnotatedString.fromHtml(
-        "<tt>" +
-                Transpose.transposeNumber(tune, text)
-                    .lines()
-                    .filter { line -> (!hideText || !line.startsWith(PREFIX_TEXT_LINE)) }
-                    .map { line ->
-                        if (line.startsWith(PREFIX_TEXT_LINE))
-                                line.removePrefix(PREFIX_TEXT_LINE)
-                        else
-                            line
+            processedText.lines().forEach { line ->
+                if (hideText && line.startsWith(PREFIX_TEXT_LINE)) {
+                    // Zeile überspringen, nichts anfügen
+                } else if (line.startsWith(PREFIX_TEXT_LINE)) {
+                    // Textzeilen bekommen einen normalen Stil
+                    withStyle(style = TextStyle) {
+                        append(line.removePrefix(PREFIX_TEXT_LINE))
+                        append("\n")
                     }
-                    .map{ l -> l.replace(" ", "&nbsp;")} // replace spaces with &nbsp;
-                    .joinToString("\n") { l -> "$l<br/>" }
-                + "</tt>"
-    )
+                } else {
+                    // Notenzeilen (oder der Rest)
+                    // Sie können hier sogar die Noten farblich hervorheben, falls gewünscht
+                    val styleToApply = if (!hideText) noteStyle else TextStyle
+                    withStyle(style = styleToApply) {
+                        append(line)
+                        append("\n")
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -56,15 +76,18 @@ fun KTabRoomText(
     uiState: State<KTabRoom>,
     settings: State<Settings>,
 ) {
+    val dynamicNoteColor = MaterialTheme.colorScheme.primary
+
     val formattedSongText by remember(
-        uiState.value.text,
-        settings.value.hideText
+        uiState.value,
+        settings.value
     ) {
         mutableStateOf(
             formatedText(
                 text = uiState.value.text,
                 tune =  TransposeTypes.NUMBER,
-                settings.value.hideText
+                noteColor = dynamicNoteColor,
+                hideText = settings.value.hideText
             )
         )
     }

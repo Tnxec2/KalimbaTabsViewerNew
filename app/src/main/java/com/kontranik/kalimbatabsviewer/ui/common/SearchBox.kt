@@ -59,6 +59,7 @@ fun SearchBox(
             label = {
                 Text(text = stringResource(R.string.search))
             },
+
             modifier = Modifier
                 .weight(1f)
                 .focusable(true)
