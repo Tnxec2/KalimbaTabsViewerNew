@@ -5,7 +5,7 @@ A simple and elegant Android app for displaying Kalimba tablatures, built with *
 
 [Play Store](https://play.google.com/store/apps/details?id=com.kontranik.kalimbatabsviewer)
 
-![App Screenshot](./Screenshot_20251116_125619.png)
+![App Screenshot](./Screenshot_20251116_131831.png)
 
 
 
