@@ -203,7 +203,7 @@ fun TabLinePairItem(
             )
         }
 
-        Column( modifier = Modifier.padding(bottom = paddingSmall)) {
+        Column( ) {
             chunks.forEach { chunk ->
                 SimpleLineRenderer(chunk.noteChunk, settings, noteStyle)
                 if (chunk.textChunk != null && !settings.hideText) {
