@@ -2,30 +2,17 @@ package com.kontranik.kalimbatabsviewer.ui.songlist
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.StarBorder
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,39 +22,31 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.paging.LoadState
-import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
 import com.kontranik.kalimbatabsviewer.AppViewModelProvider
 import com.kontranik.kalimbatabsviewer.R
-import com.kontranik.kalimbatabsviewer.room.model.KTabRoom
 import com.kontranik.kalimbatabsviewer.room.viewmodel.KtabRoomViewModel
 import com.kontranik.kalimbatabsviewer.room.viewmodel.ToggleFavoritesViewModel
 import com.kontranik.kalimbatabsviewer.ui.appbar.AppBar
 import com.kontranik.kalimbatabsviewer.ui.appbar.AppBarAction
 import com.kontranik.kalimbatabsviewer.ui.common.SearchBox
 import com.kontranik.kalimbatabsviewer.ui.dialogs.SortDialog
-import com.kontranik.kalimbatabsviewer.ui.theme.paddingMedium
 import com.kontranik.kalimbatabsviewer.ui.theme.paddingSmall
 import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun AllKTabsListScreen(
+fun FavoritesScreen(
     drawerState: DrawerState,
     navigateBack: () -> Unit,
     openSong: (id: String) -> Unit,
@@ -76,9 +55,8 @@ fun AllKTabsListScreen(
     toggleFavoritesViewModel: ToggleFavoritesViewModel = viewModel(factory = AppViewModelProvider.Factory),
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val context = LocalContext.current
 
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
 
     val searchQuery = viewModel.searchText.collectAsState("")
     val listState = rememberLazyListState()
@@ -86,18 +64,17 @@ fun AllKTabsListScreen(
     var showSortDialog by rememberSaveable { mutableStateOf(false) }
     val currentSort = viewModel.currentSort.collectAsState(null)
 
-    val list = viewModel.songsPageByFilter.collectAsLazyPagingItems()
-    val showBookmarked = viewModel.showBookmarked.collectAsState(false)
+    val list = viewModel.favoritesSongsPageByFilter.collectAsLazyPagingItems()
 
     var expandedMenu by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
+            SnackbarHost(hostState = snackBarHostState)
         },
         topBar = {
             AppBar (
-                titleString = stringResource(id = R.string.menu_all_songs),
+                titleString = stringResource(id = R.string.favorites),
                 drawerState = drawerState,
                 navigationIcon = {
                     IconButton(onClick = { coroutineScope.launch { navigateBack() } }) {
@@ -107,16 +84,6 @@ fun AllKTabsListScreen(
                     }
                 },
                 appBarActions = listOf{
-                    AppBarAction(
-                        AppBarAction(
-                        vector = if (showBookmarked.value) Icons.Filled.Star else Icons.Default.StarBorder,
-                        description = R.string.favorites,
-                        onClick = {
-                            coroutineScope.launch {
-                                viewModel.toggleShowBookmarked()
-                            }
-                        }
-                    ))
                     AppBarAction(
                         AppBarAction(
                         vector = Icons.AutoMirrored.Default.Sort,
@@ -188,67 +155,3 @@ fun AllKTabsListScreen(
         }
     }
 }
-
-@Composable
-fun PageSongs(
-    listState: LazyListState,
-    ktabs: LazyPagingItems<KTabRoom>,
-    openSong: (id: String) -> Unit,
-    onToggleFavorite: (ktabRoom: KTabRoom) -> Unit,
-) {
-
-    val coroutineScope = rememberCoroutineScope()
-
-    Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = paddingSmall)
-        ) {
-            item {
-                if (ktabs.loadState.append is LoadState.Loading) {
-                    CircularProgressIndicator(modifier = Modifier.padding(16.dp))
-                }
-            }
-            items(
-                count = ktabs.itemCount,
-                key = ktabs.itemKey { item -> item.kTabId }
-            ) { index ->
-                ktabs[index]?.let { ktabRoom ->
-                    KtabItem(ktab = ktabRoom, onOpenKtab = {
-                        openSong(ktabRoom.kTabId)
-                    }, onToggleFavorite = {
-                        onToggleFavorite(ktabRoom)
-                    })
-                }
-            }
-        }
-
-        val showButton by remember {
-            derivedStateOf {
-                // Zeige den Button, wenn mehr als das erste Element gescrollt wurde
-                listState.firstVisibleItemIndex > 1
-            }
-        }
-
-
-        AnimatedVisibility(
-            visible = showButton,
-            enter = fadeIn() + slideInVertically(initialOffsetY = { it / 2 }),
-            exit = fadeOut() + slideOutVertically(targetOffsetY = { it / 2 }),
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-        ) {
-            FloatingActionButton(
-                onClick = { coroutineScope.launch { listState.scrollToItem(0) } },
-                modifier = Modifier
-                    .padding(paddingMedium)
-            ) {
-                Icon(imageVector = Icons.Default.ArrowUpward, contentDescription = "Up")
-            }
-        }
-    }
-}
-
-

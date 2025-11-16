@@ -57,6 +57,11 @@ class KtabRoomViewModel(
         filter -> getPageByFilter(filter)
     }.asFlow().cachedIn(viewModelScope)
 
+    val favoritesSongsPageByFilter = songTextFilter.switchMap {
+            filter -> getPageByFilter(filter.copy(bookmarked = true))
+    }.asFlow().cachedIn(viewModelScope)
+
+
     private fun getPageByFilter(songTextFilter: SongTextFilter) = Pager(PagingConfig(pageSize = 15)) {
         repository.pageKtabs(songTextFilter.bookmarked, songTextFilter.text, songTextFilter.sort, songTextFilter.ascending) }
         .liveData

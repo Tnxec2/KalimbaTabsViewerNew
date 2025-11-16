@@ -8,6 +8,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
+import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -75,6 +76,7 @@ fun MainCompose(
                         ) { onUserPickedOption ->
                             when (onUserPickedOption) {
                                 Screen.KTabList,
+                                Screen.Favorites,
                                 Screen.KTabDetails,
                                 Screen.Playlist,
                                 Screen.PlaylistKtabList,
@@ -119,6 +121,12 @@ object DrawerParams {
             descriptionId = R.string.menu_all_songs,
             imageVector = Icons.AutoMirrored.Filled.LibraryBooks,
             title = R.string.menu_all_songs
+        ),
+        AppDrawerItemInfo(
+            drawerOption =  Screen.Favorites,
+            descriptionId = R.string.menu_bookmarks,
+            imageVector = Icons.Default.Bookmarks,
+            title = R.string.menu_bookmarks
         ),
         AppDrawerItemInfo(
             drawerOption =  Screen.Playlist,
