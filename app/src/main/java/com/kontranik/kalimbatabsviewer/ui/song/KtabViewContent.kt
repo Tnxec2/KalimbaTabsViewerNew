@@ -2,21 +2,17 @@ package com.kontranik.kalimbatabsviewer.ui.song
 
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -36,12 +32,9 @@ fun KTabViewContent(
     onDecreaseFontSize: () -> Unit,
     onIncreaseFontSize: () -> Unit,
 ) {
-    val verticalScrollState = rememberScrollState()
-
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(verticalScrollState)
             .background(color = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         KtabDetailsIconBox(
@@ -56,20 +49,12 @@ fun KTabViewContent(
             hideText = settings.value.hideText,
             onToggleHideText = onToggleHideText
         )
-        Box(Modifier.fillMaxWidth()) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                .fillMaxWidth()
-            ) {
-                ItemTitle(uiState.value)
+        ItemTitle(uiState.value)
 
-                KTabRoomText(
-                    uiState,
-                    settings
-                )
-            }
-        }
+        KTabRoomText(
+            uiState,
+            settings,
+        )
     }
 }
 
@@ -79,7 +64,7 @@ fun KTabViewContent(
 @Preview(showBackground = true)
 @Composable
 fun SongDetailScreenPreview() {
-    Surface(Modifier.height(500.dp)) {
+    Surface(Modifier.height(500.dp).width(300.dp)) {
         Column(Modifier.fillMaxSize()) {
             ItemTitle(mocupKtabRoomState.value, modifier = Modifier.padding(paddingSmall))
             KTabViewContent(
@@ -96,7 +81,7 @@ fun SongDetailScreenPreview() {
                 onDecreaseFontSize = {},
                 onIncreaseFontSize = {},
                 onToggleHideText = {},
-                settings = remember { mutableStateOf(Settings().copy(lineBreak = false,)) }
+                settings = remember { mutableStateOf(Settings().copy(lineBreak = true,)) }
             )
         }
     }
