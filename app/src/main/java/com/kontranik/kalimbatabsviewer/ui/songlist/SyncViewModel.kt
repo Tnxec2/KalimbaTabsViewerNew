@@ -114,18 +114,17 @@ class SyncViewModel(
                             for (i in 0 until ktabsArray.length()) {
                                 val ktabJson = ktabsArray.getJSONObject(i)
 
-                                Log.d(TAG, ktabJson.getString("updated"))
-                                val updatedDate = dateFormat.parse(ktabJson.getString("updated"))
+                                val updatedDate = if (ktabJson.has("updated")) dateFormat.parse(ktabJson.getString("updated")) else Date()
 
                                 val ktab = KTabRoom(
                                     kTabId = ktabJson.getString("_id"),
-                                    difficulty = ktabJson.getInt("difficulty"),
-                                    interpreter = ktabJson.getString("interpreter"),
-                                    source = ktabJson.getString("source"),
-                                    youtube = ktabJson.getString("youtube"),
-                                    text = ktabJson.getString("text"),
-                                    title = ktabJson.getString("title"),
-                                    updated = updatedDate ?: Date(),
+                                    difficulty = if (ktabJson.has("difficulty")) ktabJson.getInt("difficulty") else 1,
+                                    interpreter = if (ktabJson.has("interpreter")) ktabJson.getString("interpreter") else "",
+                                    source = if (ktabJson.has("source")) ktabJson.getString("source") else "",
+                                    youtube = if (ktabJson.has("youtube"))ktabJson.getString("youtube") else "",
+                                    text = if (ktabJson.has("text"))ktabJson.getString("text") else "",
+                                    title = if (ktabJson.has("title"))ktabJson.getString("title") else "",
+                                    updated = updatedDate,
                                 )
                                 ktabs.add(ktab)
 
