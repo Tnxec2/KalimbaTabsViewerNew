@@ -2,7 +2,6 @@ package com.kontranik.kalimbatabsviewer.ui.song
 
 import android.util.Log
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,25 +16,19 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kontranik.kalimbatabsviewer.helper.Transpose
@@ -43,7 +36,6 @@ import com.kontranik.kalimbatabsviewer.helper.Transpose.Companion.PREFIX_TEXT_LI
 import com.kontranik.kalimbatabsviewer.helper.TransposeTypes
 import com.kontranik.kalimbatabsviewer.room.model.KTabRoom
 import com.kontranik.kalimbatabsviewer.ui.settings.Settings
-import com.kontranik.kalimbatabsviewer.ui.theme.paddingMedium
 import com.kontranik.kalimbatabsviewer.ui.theme.paddingSmall
 
 data class TabLinePair(val noteLine: String, val textLine: String?)
@@ -197,24 +189,21 @@ fun TabLinePairItem(
         return // Frühzeitiger Abbruch, wenn kein Umbruch nötig
     }
 
-    var size by remember { mutableStateOf(IntSize.Zero) }
 
     // BoxWithConstraints liefert uns die maximale Breite
-    Box(modifier = Modifier.onGloballyPositioned { coordinates ->
-        size = coordinates.size
-    }) {
-        val chunks = remember(pair, settings, size) { // maxWidth als key!
+    BoxWithConstraints {
+        val chunks = remember(pair, settings, maxWidth) {
             splitLineToFit(
                 noteLine = pair.noteLine,
                 textLine = pair.textLine?.removePrefix(PREFIX_TEXT_LINE),
                 textMeasurer = textMeasurer,
                 textStyle = textStyle.toTextStyle(),
                 noteStyle = noteStyle.toTextStyle(),
-                maxWidth = (size.width - (paddingSmall.value*2)).toInt()
+                maxWidth = (constraints.maxWidth - paddingSmall.value*2).toInt()
             )
         }
 
-        Column {
+        Column( modifier = Modifier.padding(bottom = paddingSmall)) {
             chunks.forEach { chunk ->
                 SimpleLineRenderer(chunk.noteChunk, settings, noteStyle)
                 if (chunk.textChunk != null && !settings.hideText) {
@@ -262,7 +251,7 @@ fun splitLineToFit(
 
     // Solange eine der beiden Zeilen zu lang ist, weiter aufteilen.
     while (
-        textMeasurer.measure(currentNoteLine, noteStyle).size.width >= maxWidth ||
+        (currentNoteLine.isNotEmpty() && textMeasurer.measure(currentNoteLine, noteStyle).size.width >= maxWidth) ||
         (currentTextLine.isNotEmpty() && textMeasurer.measure(currentTextLine, textStyle).size.width >= maxWidth)
     ) {
         // Finde den besten Punkt zum Splitten (rückwärts von der max. Breite)
@@ -326,7 +315,7 @@ fun splitLineToFit(
         chunks.add(TabLineChunk(noteChunk, textChunk))
 
         // Bereite die verbleibenden Zeilenteile für die nächste Iteration vor.
-        currentNoteLine = currentNoteLine.substring(splitIndex)
+        currentNoteLine = if (splitIndex < currentNoteLine.length) currentNoteLine.substring(splitIndex) else ""
         currentTextLine =
             if (splitIndex < currentTextLine.length) currentTextLine.substring(splitIndex) else ""
 
