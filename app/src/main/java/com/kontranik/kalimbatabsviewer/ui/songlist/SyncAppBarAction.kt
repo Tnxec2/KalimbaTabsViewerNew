@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -93,7 +94,6 @@ fun SyncAppBarAction(
                         confirmDialogData = ConfirmDialogData()
                         coroutineScope.launch {
                             syncViewModel.syncSongs()
-                            onSyncCompleted()
                         }
                     },
                     onDismiss = {
@@ -112,6 +112,7 @@ fun SyncAppBarAction(
         syncState,
         onDismiss = {
             syncViewModel.syncState.value = SyncState()
+            onSyncCompleted()
         }
     )
 }
@@ -135,17 +136,29 @@ fun SyncMessageDialog(
                         .fillMaxWidth()
                 ) {
                     Text(
-                        text = if (syncState.value.isFinished.not()) stringResource(R.string.syncing) else stringResource(
+                        text = if (syncState.value.isFinished.not())
+                            stringResource(R.string.syncing)
+                        else stringResource(
                             R.string.sync_finished
                         ),
                         style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.padding(bottom = paddingMedium)
                     )
-                    Text(
-                        text = stringResource(R.string.do_not_close_the_app),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(bottom = paddingMedium)
-                    )
+                    if (syncState.value.state == SyncStateType.CONNECTING)  {
+                        CircularProgressIndicator()
+                        Text(
+                            text = "First connect can take some time",
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(bottom = paddingMedium)
+                        )
+                    }
+                    if (syncState.value.isFinished.not()) {
+                        Text(
+                            text = stringResource(R.string.do_not_close_the_app),
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(bottom = paddingMedium)
+                        )
+                    }
                     Text(
                         text = message,
                         style = MaterialTheme.typography.bodyMedium,

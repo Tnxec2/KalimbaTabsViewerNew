@@ -34,22 +34,26 @@ class SyncViewModel(
     val syncMessage = syncState.flatMapLatest { s ->
         flowOf(
             when (s.state) {
+                SyncStateType.CONNECTING -> {
+                    "Connecting..."
+                }
+
                 SyncStateType.PREPARE_SYNC_LIST -> {
                     "Sync is preparing..."
                 }
 
                 SyncStateType.SYNCING -> {
-                    "sync in progress ${s.count} / ${s.total}"
+                    "Sync in progress ${s.count} / ${s.total}"
                 }
 
                 SyncStateType.SAVING -> {
-                    "saving ${s.count} / ${s.total}"
+                    "Saving ${s.count} / ${s.total}"
                 }
 
                 SyncStateType.FINISHED -> {
                     s.error?.let { error ->
-                        "sync finished with error"
-                    } ?: "sync finished ${s.count}"
+                        "Sync finished with error. $error"
+                    } ?: "Sync finished. Fetched songs: ${s.count}."
                 }
 
                 else -> null
@@ -60,7 +64,7 @@ class SyncViewModel(
     fun syncSongs() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                syncState.value = SyncState().copy(state = SyncStateType.PREPARE_SYNC_LIST)
+                syncState.value = SyncState().copy(state = SyncStateType.CONNECTING)
                 // Erstellen Sie das richtige Format für den ISO-String: 2025-10-06T12:45:10.230Z
                 val dateFormat =
                     SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US)
@@ -75,10 +79,17 @@ class SyncViewModel(
                 val url =
                     if (lastUpdatedString != null) "${BACKEND_URI_SYNC_COUNT}?lastupdated=${lastUpdatedString}" else BACKEND_URI_SYNC_COUNT
                 Log.d("SYNC COUNT URL", "url: $url")
-                var result = fetchData(url)
+                var result = fetchData(url, first = true)
+                syncState.value = SyncState().copy(state = SyncStateType.PREPARE_SYNC_LIST)
                 if (result.contains("count")) {
                     val jsonObject = JSONObject(result)
                     val count = jsonObject.getInt("count")
+
+                    syncState.value = SyncState().copy(
+                        state = SyncStateType.SYNCING,
+                        total = count,
+                        count = 0
+                    )
 
                     if (count > 0) {
                         var page = 1
@@ -87,11 +98,6 @@ class SyncViewModel(
 
                         val ktabs = mutableListOf<KTabRoom>()
 
-                        syncState.value = SyncState().copy(
-                            state = SyncStateType.SYNCING,
-                            total = count,
-                            count = 0
-                        )
                         // Erstellen Sie das richtige Format für den ISO-String
                         val dateFormat = SimpleDateFormat(
                             "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
@@ -139,9 +145,7 @@ class SyncViewModel(
                         val updated = kTabsRepository.updateAll(ktabs)
                         Log.d(TAG, "updated: ${updated.size}")
                     }
-
                 }
-
                 syncState.value = syncState.value.copy(
                     state = SyncStateType.FINISHED,
                 )
@@ -165,6 +169,7 @@ class SyncViewModel(
 }
 
 enum class SyncStateType {
+    CONNECTING,
     PREPARE_SYNC_LIST,
     SYNCING,
     SAVING,
