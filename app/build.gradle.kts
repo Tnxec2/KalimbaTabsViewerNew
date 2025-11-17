@@ -13,8 +13,8 @@ android {
         applicationId = "com.kontranik.kalimbatabsviewer"
         minSdk = 24
         targetSdk = 36
-        versionCode = 8
-        versionName = "1.8"
+        versionCode = 9
+        versionName = "1.9"
         setProperty("archivesBaseName", "$applicationId-v$versionCode($versionName)")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
