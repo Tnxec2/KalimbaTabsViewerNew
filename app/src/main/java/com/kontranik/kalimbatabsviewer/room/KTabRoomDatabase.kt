@@ -45,7 +45,8 @@ abstract class KTabRoomDatabase : RoomDatabase() {
 
         fun getDatabase(
             context: Context,
-            scope: CoroutineScope): KTabRoomDatabase {
+            scope: CoroutineScope
+        ): KTabRoomDatabase {
             // if the INSTANCE is not null, then return it,
             // if it is, then create the database
             return INSTANCE ?: synchronized(this) {
@@ -54,38 +55,11 @@ abstract class KTabRoomDatabase : RoomDatabase() {
                     KTabRoomDatabase::class.java,
                     "ktabs_database"
                 ).fallbackToDestructiveMigration()
-                    .addCallback(KTabDatabaseCallback(scope))
                     .build()
                 INSTANCE = instance
                 // return instance
                 instance
             }
-        }
-
-        private class KTabDatabaseCallback(
-            private val scope: CoroutineScope
-        ) : RoomDatabase.Callback() {
-            /**
-             * Override the onCreate method to populate the database.
-             */
-            override fun onCreate(db: SupportSQLiteDatabase) {
-                super.onCreate(db)
-                // If you want to keep the data through app restarts,
-                // comment out the following line.
-                INSTANCE?.let { database ->
-                    scope.launch(Dispatchers.IO) {
-                        populateDatabase(database.kTabsDao(), database.playlistDao(), database.playlistKtabDao())
-                    }
-                }
-            }
-        }
-
-        /**
-         * Populate the database in a new coroutine.
-         * If you want to start with more words, just add them.
-         */
-        suspend fun populateDatabase(kTabsDao: KTabsDao, playlistDao: PlaylistDao, playlistKtabDao: PlaylistKtabDao) {
-            // on start routine,
         }
     }
 }
